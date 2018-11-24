@@ -1,0 +1,60 @@
+#
+# Copyright 2018, akashche at redhat.com
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name:                vt-utils
+version:             0.1.0.0
+github:              "akashche/vt-utils"
+license:             MIT
+author:              "akashche at redhat.com"
+maintainer:          "akashche at redhat.com"
+copyright:           "2018 akashche at redhat.com"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/akashche/vt-utils#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- aeson
+- bytestring
+- directory
+- HUnit
+- text
+- time
+- unordered-containers
+- vector
+
+library:
+  source-dirs: src
+
+tests:
+  vt-utils-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - vt-utils
