@@ -73,6 +73,8 @@ module VtUtils.Prelude
     , CString
     -- GHC.Generics
     , Generic
+    -- VtUtils.IO
+    , ioWithFileBytes, ioWithFileText
     -- VtUtils.Text
     , textShow
     ) where
@@ -104,5 +106,6 @@ import Debug.Trace (trace)
 import Foreign.C.String (CString)
 import GHC.Generics (Generic)
 
+import VtUtils.IO (ioWithFileBytes, ioWithFileText)
 import VtUtils.Text (textShow)
 

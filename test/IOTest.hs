@@ -23,9 +23,7 @@ module IOTest ( ioTest ) where
 
 import Test.HUnit
 import Prelude (($), (<$>), return)
-import Data.Text (unpack)
 import Data.Text.Encoding (decodeUtf8)
-import Data.Text.IO (readFile)
 
 import qualified Data.ByteString.Lazy as ByteStringLazy
 import qualified Data.Text.Lazy as TextLazy
@@ -34,16 +32,14 @@ import VtUtils.IO
 
 testWithFileBytes :: Test
 testWithFileBytes = TestLabel "testWithFileBytes" $ TestCase $ do
-    lazy <- decodeUtf8 <$> ioWithFileBytes "ChangeLog.md" (\bs -> return (ByteStringLazy.toStrict bs))
-    strict <- readFile (unpack "ChangeLog.md")
-    assertEqual "bytes" strict lazy
+    tx <- decodeUtf8 <$> ioWithFileBytes "test/data/test.txt" (\bs -> return (ByteStringLazy.toStrict bs))
+    assertEqual "bytes" "foo" tx
     return ()
 
 testWithFileText :: Test
 testWithFileText = TestLabel "testWithFileText" $ TestCase $ do
-    lazy <- ioWithFileText "ChangeLog.md" (\tx -> return (TextLazy.toStrict tx))
-    strict <- readFile (unpack "ChangeLog.md")
-    assertEqual "text" strict lazy
+    tx <- ioWithFileText "test/data/test.txt" (\tx -> return (TextLazy.toStrict tx))
+    assertEqual "text" "foo" tx
     return ()
 
 ioTest :: Test
