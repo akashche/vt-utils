@@ -21,9 +21,9 @@
 
 module PreludeTest ( preludeTest ) where
 
+import Test.HUnit
 import Prelude ()
 import VtUtils.Prelude
-import Test.HUnit
 
 test1 :: Test
 test1 = TestLabel "test" $ TestCase $ do

@@ -74,7 +74,7 @@ module VtUtils.Prelude
     -- GHC.Generics
     , Generic
     -- VtUtils.Text
-    , textShow, textVector
+    , textShow
     ) where
 
 import Prelude
@@ -104,5 +104,5 @@ import Debug.Trace (trace)
 import Foreign.C.String (CString)
 import GHC.Generics (Generic)
 
-import VtUtils.Text (textShow, textVector)
+import VtUtils.Text (textShow)
 

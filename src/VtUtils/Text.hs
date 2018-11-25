@@ -21,7 +21,6 @@
 
 module VtUtils.Text
     ( textShow
-    , textVector
     ) where
 
 import Prelude (Maybe, Show, String, otherwise, show)
@@ -30,7 +29,6 @@ import Data.Maybe (isJust, fromJust)
 import Data.Text (Text, pack)
 import Data.Text.Encoding (decodeUtf8)
 import Data.Typeable (Typeable, cast)
-import Data.Vector (Vector, fromList, map)
 
 textShow :: (Show a, Typeable a) => a -> Text
 textShow val
@@ -42,7 +40,3 @@ textShow val
         castedText = cast val :: Maybe Text
         castedString = cast val :: Maybe String
         castedBytes = cast val :: Maybe ByteString
-
-textVector :: [String] -> Vector Text
-textVector list =
-    map pack (fromList list)

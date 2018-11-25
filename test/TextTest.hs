@@ -22,17 +22,19 @@
 module TextTest ( textTest ) where
 
 import Test.HUnit
-
-import Prelude (($))
+import Prelude (String, ($))
+import Data.ByteString (ByteString)
 import Data.Text (Text)
 
 import VtUtils.Text
 
-test1 :: Test
-test1 = TestLabel "test1" $ TestCase $ do
-    assertEqual "test1" ("foo" :: Text) (textShow ("foo" :: Text))
+testShow :: Test
+testShow = TestLabel "testShow" $ TestCase $ do
+    assertEqual "text" "foo" (textShow ("foo" :: Text))
+    assertEqual "string" "foo" (textShow ("foo" :: String))
+    assertEqual "bytestring" "foo" (textShow ("foo" :: ByteString))
 
 textTest :: Test
 textTest = TestLabel "TextTest" (TestList
-    [ test1
+    [ testShow
     ])

@@ -19,33 +19,35 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
 
-module VtUtils.IO
-    ( ioWithFileBytes
-    , ioWithFileText
-    ) where
+module IOTest ( ioTest ) where
 
-import Prelude (IO, return)
-import Data.Text (Text, unpack)
-import Data.Text.Lazy.Encoding (decodeUtf8)
-import System.IO (IOMode(ReadMode), withBinaryFile)
+import Test.HUnit
+import Prelude (($), (<$>), return)
+import Data.Text (unpack)
+import Data.Text.Encoding (decodeUtf8)
+import Data.Text.IO (readFile)
 
 import qualified Data.ByteString.Lazy as ByteStringLazy
 import qualified Data.Text.Lazy as TextLazy
 
-ioWithFileBytes :: Text -> (ByteStringLazy.ByteString -> IO a) -> IO a
-ioWithFileBytes path fun =
-    withBinaryFile (unpack path) ReadMode cb
-    where
-        cb ha = do
-            bs <- ByteStringLazy.hGetContents ha
-            res <- fun bs
-            return res
+import VtUtils.IO
 
-ioWithFileText :: Text -> (TextLazy.Text -> IO a) -> IO a
-ioWithFileText path fun =
-    ioWithFileBytes path cb
-    where
-        cb bs = do
-            let tx = decodeUtf8 bs
-            res <- fun tx
-            return res
+testWithFileBytes :: Test
+testWithFileBytes = TestLabel "testWithFileBytes" $ TestCase $ do
+    lazy <- decodeUtf8 <$> ioWithFileBytes "ChangeLog.md" (\bs -> return (ByteStringLazy.toStrict bs))
+    strict <- readFile (unpack "ChangeLog.md")
+    assertEqual "bytes" strict lazy
+    return ()
+
+testWithFileText :: Test
+testWithFileText = TestLabel "testWithFileText" $ TestCase $ do
+    lazy <- ioWithFileText "ChangeLog.md" (\tx -> return (TextLazy.toStrict tx))
+    strict <- readFile (unpack "ChangeLog.md")
+    assertEqual "text" strict lazy
+    return ()
+
+ioTest :: Test
+ioTest = TestLabel "IOTest" (TestList
+    [ testWithFileBytes
+    , testWithFileText
+    ])

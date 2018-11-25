@@ -24,12 +24,14 @@ import Data.Vector (fromList)
 import VtUtils.HUnit (hunitMain)
 
 import HUnitTest
+import IOTest
 import PreludeTest
 import TextTest
 
 main :: IO ()
 main = hunitMain (fromList
     [ hunitTest
+    , ioTest
     , preludeTest
     , textTest
     ])

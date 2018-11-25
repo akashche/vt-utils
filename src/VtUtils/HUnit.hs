@@ -26,7 +26,7 @@ module VtUtils.HUnit
     , hunitRunSingle
     ) where
 
-import Prelude (Bool, IO, (==), (/=), (.), (<$>), error, return)
+import Prelude (Bool, IO, (==), (/=), (.), (<$>), error, fmap, return)
 import Control.Monad (when)
 import Data.Monoid ((<>))
 import Data.Text (Text, pack, unpack)
@@ -34,7 +34,7 @@ import Data.Vector (Vector, (!), filter, fromList, length, toList)
 import Test.HUnit (Test(..), runTestTT, testCasePaths)
 import System.Environment (getArgs)
 
-import VtUtils.Text (textShow, textVector)
+import VtUtils.Text (textShow)
 
 labelFilter :: Text -> Test -> Bool
 labelFilter grlabel gr  =
@@ -76,7 +76,7 @@ hunitRunSingle tests grlabel tslabel = do
 
 hunitMain :: Vector Test -> IO()
 hunitMain tests = do
-    args <- textVector <$> getArgs
+    args <- (fmap pack) <$> fromList <$> getArgs
     case (length args) of
         0 -> hunitRun tests
         1 -> hunitRunGroup tests (args ! 0)
