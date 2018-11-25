@@ -73,8 +73,16 @@ module VtUtils.Prelude
     , CString
     -- GHC.Generics
     , Generic
+    -- VtUtils.Date
+    , dateFormat, dateFormatISO8601, dateParseISO8601
     -- VtUtils.IO
     , ioWithFileBytes, ioWithFileText
+    -- VtUtils.Json
+    , jsonDecodeFile,jsonDecodeText, jsonEncodeText, jsonGet
+    -- VtUtils.Map
+    , mapGet
+    -- VtUtils.Path
+    , pathIsAbsolute, pathConcat, pathPrepend
     -- VtUtils.Text
     , textShow
     ) where
@@ -106,6 +114,9 @@ import Debug.Trace (trace)
 import Foreign.C.String (CString)
 import GHC.Generics (Generic)
 
+import VtUtils.Date (dateFormat, dateFormatISO8601, dateParseISO8601)
 import VtUtils.IO (ioWithFileBytes, ioWithFileText)
+import VtUtils.Json (jsonDecodeFile,jsonDecodeText, jsonEncodeText, jsonGet)
+import VtUtils.Map (mapGet)
+import VtUtils.Path (pathIsAbsolute, pathConcat, pathPrepend)
 import VtUtils.Text (textShow)
-

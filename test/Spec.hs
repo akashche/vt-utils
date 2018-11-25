@@ -28,6 +28,7 @@ import DateTest
 import IOTest
 import JsonTest
 import MapTest
+import PathTest
 import PreludeTest
 import TextTest
 
@@ -38,6 +39,7 @@ main = hunitMain (fromList
     , ioTest
     , jsonTest
     , mapTest
+    , pathTest
     , preludeTest
     , textTest
     ])
