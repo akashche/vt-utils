@@ -19,23 +19,26 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
 
-import Prelude (IO)
-import Data.Vector (fromList)
-import VtUtils.HUnit (hunitMain)
+module MapTest ( mapTest ) where
 
-import HUnitTest
-import IOTest
-import JsonTest
-import MapTest
-import PreludeTest
-import TextTest
+import Test.HUnit
+import Prelude (Int, ($), return)
+import Data.HashMap.Strict (HashMap, fromList)
+import Data.Text (Text)
 
-main :: IO ()
-main = hunitMain (fromList
-    [ hunitTest
-    , ioTest
-    , jsonTest
-    , mapTest
-    , preludeTest
-    , textTest
+import VtUtils.Map
+
+testGet :: Test
+testGet = TestLabel "testShow" $ TestCase $ do
+    let map = fromList
+            [ ("foo", 41)
+            , ("bar", 42)
+            ] :: HashMap Text Int
+    assertEqual "get" 41 (mapGet map "foo")
+    return ()
+
+mapTest :: Test
+mapTest = TestLabel "MapTest" (TestList
+    [ testGet
     ])
+
