@@ -29,7 +29,7 @@ import Data.Text (Text)
 import VtUtils.Map
 
 testGet :: Test
-testGet = TestLabel "testShow" $ TestCase $ do
+testGet = TestLabel "testGet" $ TestCase $ do
     let map = fromList
             [ ("foo", 41)
             , ("bar", 42)
@@ -41,4 +41,3 @@ mapTest :: Test
 mapTest = TestLabel "MapTest" (TestList
     [ testGet
     ])
-

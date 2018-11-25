@@ -24,6 +24,7 @@ import Data.Vector (fromList)
 import VtUtils.HUnit (hunitMain)
 
 import HUnitTest
+import DateTest
 import IOTest
 import JsonTest
 import MapTest
@@ -33,6 +34,7 @@ import TextTest
 main :: IO ()
 main = hunitMain (fromList
     [ hunitTest
+    , dateTest
     , ioTest
     , jsonTest
     , mapTest
