@@ -26,9 +26,9 @@ module VtUtils.Prelude
     , pure, read, return, seq, sequence, sequence_, show, undefined
     -- Control.Exception
     , SomeException
-    , catch, throw
+    , bracket, bracket_, throw, try
     -- Control.Monad
-    , unless, when
+    , forM, forM_, unless, when
     -- Control.Monad.ST
     , runST
     -- Data.Aeson
@@ -93,8 +93,8 @@ import Prelude
     , abs, div, error, flip, fmap, fromIntegral, id, mapM, mapM_, mod, not, otherwise
     , pure, read, return, seq, sequence, sequence_, show, undefined
     )
-import Control.Exception (SomeException, catch, throw)
-import Control.Monad (unless, when)
+import Control.Exception (SomeException, bracket, bracket_, throw, try)
+import Control.Monad (forM, forM_, unless, when)
 import Control.Monad.ST (runST)
 import Data.Aeson (FromJSON, Object, ToJSON, (.=), object)
 import Data.ByteString (ByteString)

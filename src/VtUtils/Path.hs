@@ -51,7 +51,8 @@ pathConcat prefix postfix
 
 pathPrepend :: Text -> Text -> Text
 pathPrepend prefix path =
-    case pathIsAbsolute path of
-        True -> path
-        False -> pathConcat prefix path
+    if pathIsAbsolute path then
+        path
+    else
+        pathConcat prefix path
 

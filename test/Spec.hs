@@ -25,6 +25,7 @@ import VtUtils.HUnit (hunitMain)
 
 import HUnitTest
 import DateTest
+import FSTest
 import IOTest
 import JsonTest
 import MapTest
@@ -36,6 +37,7 @@ main :: IO ()
 main = hunitMain (fromList
     [ hunitTest
     , dateTest
+    , fsTest
     , ioTest
     , jsonTest
     , mapTest

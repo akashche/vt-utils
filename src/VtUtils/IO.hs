@@ -24,7 +24,7 @@ module VtUtils.IO
     , ioWithFileText
     ) where
 
-import Prelude (IO, return)
+import Prelude (IO, ($), return)
 import Data.Text (Text, unpack)
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import System.IO (IOMode(ReadMode), withBinaryFile)
@@ -34,18 +34,14 @@ import qualified Data.Text.Lazy as TextLazy
 
 ioWithFileBytes :: Text -> (ByteStringLazy.ByteString -> IO a) -> IO a
 ioWithFileBytes path fun =
-    withBinaryFile (unpack path) ReadMode cb
-    where
-        cb ha = do
-            bs <- ByteStringLazy.hGetContents ha
-            res <- fun bs
-            return res
+    withBinaryFile (unpack path) ReadMode $ \ha -> do
+        bs <- ByteStringLazy.hGetContents ha
+        res <- fun bs
+        return res
 
 ioWithFileText :: Text -> (TextLazy.Text -> IO a) -> IO a
 ioWithFileText path fun =
-    ioWithFileBytes path cb
-    where
-        cb bs = do
-            let tx = decodeUtf8 bs
-            res <- fun tx
-            return res
+    ioWithFileBytes path $ \bs -> do
+        let tx = decodeUtf8 bs
+        res <- fun tx
+        return res
