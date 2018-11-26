@@ -42,13 +42,13 @@ iso8601 = "%Y-%m-%d %H:%M:%S"
 -- Arguments:
 --
 --    * @format :: Text@: [Format string](https://hackage.haskell.org/package/time-1.9.2/docs/Data-Time-Format.html#v:formatTime)
---    * @dt :: UTCTime@: Date to format
+--    * @date :: UTCTime@: Date to format
 --
 -- Return value: String containing a date in a specified format
 --
 dateFormat :: Text -> UTCTime -> Text
-dateFormat format dt =
-    pack (formatTime defaultTimeLocale (unpack format) dt)
+dateFormat format date =
+    pack (formatTime defaultTimeLocale (unpack format) date)
 
 -- | Formats a date into a Text string using ISO8601 formatting string
 --
@@ -58,12 +58,12 @@ dateFormat format dt =
 --
 -- Arguments:
 --
---    * @dt :: UTCtime@: Date to format
+--    * @date :: UTCtime@: Date to format
 --
 -- Return value: String containing a date in ISO8601 format
 --
 dateFormatISO8601 :: UTCTime -> Text
-dateFormatISO8601 dt = dateFormat iso8601 dt
+dateFormatISO8601 date = dateFormat iso8601 date
 
 -- | Parses Text string using ISO8601 format
 --
@@ -74,12 +74,12 @@ dateFormatISO8601 dt = dateFormat iso8601 dt
 --
 -- Arguments:
 --
---    * @tx :: Text@: Text string containing a date in ISO8601 format
+--    * @text :: Text@: Text string containing a date in ISO8601 format
 --
 -- Return value: Parsed date
 --
 dateParseISO8601 :: Text -> UTCTime
-dateParseISO8601 tx =
-    case parseTimeM False defaultTimeLocale (unpack iso8601) (unpack tx) :: Maybe UTCTime of
+dateParseISO8601 text =
+    case parseTimeM False defaultTimeLocale (unpack iso8601) (unpack text) :: Maybe UTCTime of
         Just tm -> tm
-        Nothing -> (error . unpack) ("Error parsing ISO8601 format, date: [" <> tx <> "]")
+        Nothing -> (error . unpack) ("Error parsing ISO8601 format, date: [" <> text <> "]")

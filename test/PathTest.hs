@@ -58,4 +58,3 @@ pathTest = TestLabel "PathTest" (TestList
     , testConcat
     , testPrepend
     ])
-

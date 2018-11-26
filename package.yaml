@@ -40,6 +40,7 @@ dependencies:
 - bytestring
 - directory
 - HUnit
+- parsec
 - text
 - time
 - unordered-containers

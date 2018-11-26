@@ -29,6 +29,7 @@ import FSTest
 import IOTest
 import JsonTest
 import MapTest
+import ParsecTest
 import PathTest
 import PreludeTest
 import TextTest
@@ -41,6 +42,7 @@ main = hunitMain (fromList
     , ioTest
     , jsonTest
     , mapTest
+    , parsecTest
     , pathTest
     , preludeTest
     , textTest
