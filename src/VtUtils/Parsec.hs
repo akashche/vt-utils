@@ -20,7 +20,8 @@
 {-# LANGUAGE Strict #-}
 
 module VtUtils.Parsec
-    ( parsecFloatAsInt
+    ( Parser
+    -- combinators
     , parsecInt
     , parsecLineContains
     , parsecLinePrefix
@@ -37,13 +38,13 @@ module VtUtils.Parsec
     , parsecParseText
     ) where
 
-import Prelude (Either(..), Int, IO, (+), (-), (*), (>), (.), ($), (>>), (<$>), error, read, return)
+import Prelude (Either(..), Int, IO, (-), (>), (.), ($), (>>), (<$>), error, read, return)
 import Data.List (foldl', intersperse)
 import Data.Monoid ((<>))
 import Data.Text (Text, isInfixOf, isPrefixOf, pack, stripStart, unpack)
 import Data.Text.Lazy (fromChunks, toStrict)
 import Data.Text.Lazy.Builder (fromString, fromText, toLazyText)
-import Text.Parsec ( ParseError, (<|>), char, lookAhead, many1, manyTill, noneOf, oneOf, option, parse, skipMany, try)
+import Text.Parsec (ParseError, (<|>), char, lookAhead, many1, manyTill, noneOf, oneOf, parse, skipMany, try)
 import Text.Parsec.Char (anyChar, digit, string)
 import Text.Parsec.Error (Message(..), errorMessages, errorPos, messageString)
 import Text.Parsec.Pos (sourceColumn, sourceLine, sourceName)
@@ -60,21 +61,6 @@ parsecInt = do
     let val = read valStr :: Int
     parsecWhitespace
     return val
-
-parsecFloatAsInt :: Parser Int
-parsecFloatAsInt = do
-    headString <- many1 digit
-    let head = read headString :: Int
-    tail <- option
-        0
-        (do
-            parsecSkipOne (char '.')
-            tailString <- many1 digit
-            let tail = read tailString :: Int
-            return tail)
-    let res = head * 1000 + tail
-    parsecWhitespace
-    return res
 
 parsecLineContains :: Text -> Parser Text
 parsecLineContains needle = do
