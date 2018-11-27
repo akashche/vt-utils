@@ -21,7 +21,7 @@
 
 module VtUtils.Prelude
     ( Bool(True, False), Either(Left, Right), Eq, Int, IO, Maybe(Just, Nothing), Read, Show, String
-    , (+), (-), (*), (/), (>), (>=), (<), (<=), (==), (/=), (.), (>>), (>>=), (&&), (||), (<$>), (<*>), ($)
+    , (+), (-), (*), (/), (>), (>=), (<), (<=), (==), (/=), (.), ($), ($!), (>>), (>>=), (&&), (||), (<$>), (<*>)
     , abs, div, error, flip, fmap, fromIntegral, id, mapM, mapM_, mod, not, otherwise
     , pure, read, return, seq, sequence, sequence_, show, undefined
     -- Control.Exception
@@ -89,7 +89,7 @@ module VtUtils.Prelude
 
 import Prelude
     ( Bool(True, False), Either(Left, Right), Eq, Int, IO, Maybe(Just, Nothing), Read, Show, String
-    , (+), (-), (*), (/), (>), (>=), (<), (<=), (==), (/=), (.), (>>), (>>=), (&&), (&&), (||), (<$>), (<*>), ($)
+    , (+), (-), (*), (/), (>), (>=), (<), (<=), (==), (/=), (.), ($), ($!), (>>), (>>=), (&&), (&&), (||), (<$>), (<*>)
     , abs, div, error, flip, fmap, fromIntegral, id, mapM, mapM_, mod, not, otherwise
     , pure, read, return, seq, sequence, sequence_, show, undefined
     )

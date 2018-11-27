@@ -22,18 +22,19 @@
 module ParsecTest ( parsecTest ) where
 
 import Test.HUnit
-import Prelude (($), return)
+import Prelude (Either(..), ($), ($!), (<$>), (>>), return)
+import Control.Exception (SomeException, try)
+import Data.Text (Text, isPrefixOf, pack)
+import Text.Parsec ((<|>), digit, many1, string)
 
 import VtUtils.Parsec
+import VtUtils.Text
 
-testInt :: Test
-testInt = TestLabel "testInt" $ TestCase $ do
-    assertEqual "int" 42 (parsecParseText parsecInt "42")
-    return ()
+tx :: Text
+tx = "foo 41\n42 bar\nbaz 43\n"
 
 testLineContains :: Test
 testLineContains = TestLabel "testLineContains" $ TestCase $ do
-    let tx = "foo 41\n42 bar\nbaz 43\n"
     assertEqual "41" "foo 41" (parsecParseText (parsecLineContains "41") tx)
     assertEqual "42" "42 bar" (parsecParseText (parsecLineContains "42") tx)
     assertEqual "43" "baz 43" (parsecParseText (parsecLineContains "43") tx)
@@ -41,69 +42,71 @@ testLineContains = TestLabel "testLineContains" $ TestCase $ do
 
 testLinePrefix :: Test
 testLinePrefix = TestLabel "testLinePrefix" $ TestCase $ do
---  TODO
+    assertEqual "42" "42 bar" (parsecParseText (parsecLinePrefix "42") tx)
+    return ()
+
+testLineNoPrefix :: Test
+testLineNoPrefix = TestLabel "testLineNoPrefix" $ TestCase $ do
+    let parser = parsecLineNoPrefix "foo"
+    assertEqual "42 line" "42 bar" (parsecParseText parser tx)
     return ()
 
 testSkipLines :: Test
 testSkipLines = TestLabel "testSkipLines" $ TestCase $ do
---  TODO
-    return ()
-
-testSkipLinesPrefix :: Test
-testSkipLinesPrefix = TestLabel "testSkipLinesPrefix" $ TestCase $ do
---  TODO
-    return ()
-
-testSkipLinesTill :: Test
-testSkipLinesTill = TestLabel "testSkipLinesTill" $ TestCase $ do
---  TODO
+    let parser = parsecSkipLines 1 >> many1 digit
+    assertEqual "42" "42" (parsecParseText parser tx)
     return ()
 
 testSkipManyTill :: Test
 testSkipManyTill = TestLabel "testSkipManyTill" $ TestCase $ do
---  TODO
-    return ()
-
-testSkipOne :: Test
-testSkipOne = TestLabel "testSkipOne" $ TestCase $ do
---  TODO
+    let parser = parsecSkipManyTill "42" >> many1 digit
+    assertEqual "42" "42" (parsecParseText parser tx)
     return ()
 
 testTry :: Test
 testTry = TestLabel "testTry" $ TestCase $ do
---  TODO
+    let parser = parsecTry (string "bar") <|> string "foo"
+    assertEqual "foo" "foo" (parsecParseText parser tx)
     return ()
 
 testWhitespace :: Test
 testWhitespace = TestLabel "testWhitespace" $ TestCase $ do
---  TODO
+    let parser = string "foo 41" >> parsecWhitespace >> many1 digit
+    assertEqual "42" "42" (parsecParseText parser tx)
     return ()
 
 testErrorToText :: Test
 testErrorToText = TestLabel "testErrorToText" $ TestCase $ do
---  TODO
+    let expected = "ParseError: file: [], line: [1], column: [1], messages: [unexpected: \"f\", expected: \"bar\"]"
+    res <- try $ return $! parsecParseText (string "bar") tx
+    case res of
+        Right _ -> assertFailure "Parser must fail"
+        Left (e :: SomeException) -> do
+            let etx = textShow e
+            assertBool "err message" (isPrefixOf expected etx)
     return ()
 
 testParseFile :: Test
 testParseFile = TestLabel "testParseFile" $ TestCase $ do
---  TODO
+    let parser = pack <$> string "foo"
+    res <- parsecParseFile parser "test/data/test.txt"
+    assertEqual "foo" "foo" res
     return ()
 
 testParseText :: Test
 testParseText = TestLabel "testParseText" $ TestCase $ do
---  TODO
+    let parser = pack <$> string "foo"
+    let res = parsecParseText parser "foo"
+    assertEqual "foo" "foo" res
     return ()
 
 parsecTest :: Test
 parsecTest = TestLabel "ParsecTest" (TestList
-    [ testInt
-    , testLineContains
+    [ testLineContains
     , testLinePrefix
+    , testLineNoPrefix
     , testSkipLines
-    , testSkipLinesPrefix
-    , testSkipLinesTill
     , testSkipManyTill
-    , testSkipOne
     , testTry
     , testWhitespace
     , testErrorToText

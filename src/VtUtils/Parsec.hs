@@ -22,14 +22,11 @@
 module VtUtils.Parsec
     ( Parser
     -- combinators
-    , parsecInt
     , parsecLineContains
     , parsecLinePrefix
+    , parsecLineNoPrefix
     , parsecSkipLines
-    , parsecSkipLinesPrefix
-    , parsecSkipLinesTill
     , parsecSkipManyTill
-    , parsecSkipOne
     , parsecTry
     , parsecWhitespace
     -- non-combinator utils
@@ -38,14 +35,14 @@ module VtUtils.Parsec
     , parsecParseText
     ) where
 
-import Prelude (Either(..), Int, IO, (-), (>), (.), ($), (>>), (<$>), error, read, return)
+import Prelude (Either(..), Int, IO, (-), (>), (.), ($), (<$>), error, return)
 import Data.List (foldl', intersperse)
 import Data.Monoid ((<>))
 import Data.Text (Text, isInfixOf, isPrefixOf, pack, stripStart, unpack)
 import Data.Text.Lazy (fromChunks, toStrict)
 import Data.Text.Lazy.Builder (fromString, fromText, toLazyText)
-import Text.Parsec (ParseError, (<|>), char, lookAhead, many1, manyTill, noneOf, oneOf, parse, skipMany, try)
-import Text.Parsec.Char (anyChar, digit, string)
+import Text.Parsec (ParseError, (<|>), char, lookAhead, manyTill, noneOf, oneOf, parse, skipMany, try)
+import Text.Parsec.Char (anyChar, string)
 import Text.Parsec.Error (Message(..), errorMessages, errorPos, messageString)
 import Text.Parsec.Pos (sourceColumn, sourceLine, sourceName)
 import Text.Parsec.Text.Lazy (Parser)
@@ -55,37 +52,41 @@ import VtUtils.Text
 
 -- combinators
 
-parsecInt :: Parser Int
-parsecInt = do
-    valStr <- many1 digit
-    let val = read valStr :: Int
-    parsecWhitespace
-    return val
-
 parsecLineContains :: Text -> Parser Text
 parsecLineContains needle = do
-    lineSt <- manyTill (noneOf ['\n']) (char '\n')
-    let line = (pack lineSt)
-    parsecWhitespace
-    if isInfixOf needle line then
+    line <- pack <$> manyTill (noneOf ['\n']) (char '\n')
+    if isInfixOf needle line then do
+        parsecWhitespace
         return line
     else
         parsecLineContains needle
 
 parsecLinePrefix :: Text -> Parser Text
 parsecLinePrefix prefix = do
-    lineSt <- manyTill (noneOf ['\n']) (char '\n')
-    let line = (pack lineSt)
-    if isPrefixOf prefix (stripStart line) then
-        parsecWhitespace >> return line
+    line <- pack <$> manyTill (noneOf ['\n']) (char '\n')
+    if isPrefixOf prefix (stripStart line) then do
+        parsecWhitespace
+        return line
     else
         parsecLinePrefix prefix
 
-parsecSkipOne :: Parser a -> Parser ()
-parsecSkipOne acomb = do
-    _ <- acomb
-    parsecWhitespace
-    return ()
+parsecLineNoPrefix :: Text -> Parser Text
+parsecLineNoPrefix prefix = do
+    line <- pack <$> manyTill (noneOf ['\n']) (char '\n')
+    if isPrefixOf prefix (stripStart line) then
+        parsecLineNoPrefix prefix
+    else do
+        parsecWhitespace
+        return line
+
+parsecSkipLines :: Int -> Parser ()
+parsecSkipLines count =
+    if count > 0 then do
+        _ <- manyTill (noneOf ['\n']) (char '\n')
+        parsecSkipLines (count - 1)
+    else do
+        parsecWhitespace
+        return ()
 
 -- warning: all look-ahead data is kept in memory
 parsecSkipManyTill :: Text -> Parser ()
@@ -102,30 +103,6 @@ parsecSkipManyTill end = do
             _ <- anyChar
             scan
             return ()
-
-parsecSkipLines :: Int -> Parser ()
-parsecSkipLines count =
-    if count > 0 then do
-        _ <- manyTill (noneOf ['\n']) (char '\n')
-        parsecWhitespace
-        parsecSkipLines (count - 1)
-    else
-        return ()
-
-parsecSkipLinesPrefix :: Text -> Parser ()
-parsecSkipLinesPrefix prefix = do
-    lineSt <- manyTill (noneOf ['\n']) (char '\n')
-    let line = (pack lineSt)
-    if isPrefixOf prefix (stripStart line) then
-        parsecSkipLinesPrefix prefix
-    else do
-        parsecWhitespace
-        return ()
-
-parsecSkipLinesTill :: Text -> Parser ()
-parsecSkipLinesTill needle = do
-    _ <- parsecLineContains needle
-    return ()
 
 parsecTry :: Parser a -> Parser a
 parsecTry = try

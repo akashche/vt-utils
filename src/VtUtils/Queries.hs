@@ -36,10 +36,12 @@ type Queries = HashMap Text Text
 
 singleQuery :: Parser (Text, Text)
 singleQuery = do
-    parsecSkipOne (string "/**")
+    _ <- string "/**"
+    parsecWhitespace
     name <- many1 alphaNum
     parsecWhitespace
-    parsecSkipOne (string "*/")
+    _ <- string "*/"
+    parsecWhitespace
     value <- manyTill anyChar
         (   (parsecTry (lookAhead (string "/**")) >> return ())
         <|> eof
@@ -51,7 +53,7 @@ singleQuery = do
 
 queries :: Parser Queries
 queries = do
-    parsecSkipLinesPrefix "--"
+    _ <- parsecLineNoPrefix "--"
     parsecSkipManyTill "/**"
     li <- many1 singleQuery
     return (fromList li)
