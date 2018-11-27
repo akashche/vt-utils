@@ -24,6 +24,7 @@ module ParsecTest ( parsecTest ) where
 import Test.HUnit
 import Prelude (($), return)
 
+-- TODO
 -- import VtUtils.Parsec
 
 testFloatAsInt :: Test

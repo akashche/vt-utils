@@ -39,7 +39,7 @@ testCopyDirectory = TestLabel "testCopyDirectory" $ TestCase $ do
         $ do
             _ <- fsCopyDirectory "test/data" "test/scratch/data"
             li <- (fmap pack) <$> fromList <$> listDirectory "test/scratch/data"
-            assertEqual "count" 2 (length li)
+            assertEqual "count" 3 (length li)
             contents <- readFile "test/scratch/data/test.txt"
             assertEqual "contents" "foo" contents
             return ()

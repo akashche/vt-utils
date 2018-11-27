@@ -40,14 +40,14 @@ module VtUtils.Parsec
 import Prelude (Either(..), Int, IO, (+), (-), (*), (>), (.), ($), (>>), (<$>), error, read, return)
 import Data.List (foldl', intersperse)
 import Data.Monoid ((<>))
+import Data.Text (Text, isInfixOf, isPrefixOf, pack, stripStart, unpack)
+import Data.Text.Lazy (fromChunks, toStrict)
+import Data.Text.Lazy.Builder (fromString, fromText, toLazyText)
 import Text.Parsec ( ParseError, (<|>), char, lookAhead, many1, manyTill, noneOf, oneOf, option, parse, skipMany, try)
 import Text.Parsec.Char (anyChar, digit, string)
 import Text.Parsec.Error (Message(..), errorMessages, errorPos, messageString)
 import Text.Parsec.Pos (sourceColumn, sourceLine, sourceName)
 import Text.Parsec.Text.Lazy (Parser)
-import Data.Text (Text, isInfixOf, isPrefixOf, pack, stripStart, unpack)
-import Data.Text.Lazy (fromChunks, toStrict)
-import Data.Text.Lazy.Builder (fromString, fromText, toLazyText)
 
 import VtUtils.IO
 import VtUtils.Text

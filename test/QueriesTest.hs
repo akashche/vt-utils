@@ -19,33 +19,25 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
 
-import Prelude (IO)
-import Data.Vector (fromList)
-import VtUtils.HUnit (hunitMain)
+module QueriesTest ( queriesTest ) where
 
-import HUnitTest
-import DateTest
-import FSTest
-import IOTest
-import JsonTest
-import MapTest
-import ParsecTest
-import PathTest
-import PreludeTest
-import QueriesTest
-import TextTest
+import Test.HUnit
+import Prelude (return, ($))
+import Data.HashMap.Strict (size)
 
-main :: IO ()
-main = hunitMain (fromList
-    [ hunitTest
-    , dateTest
-    , fsTest
-    , ioTest
-    , jsonTest
-    , mapTest
-    , parsecTest
-    , pathTest
-    , preludeTest
-    , queriesTest
-    , textTest
+import VtUtils.Map
+import VtUtils.Queries
+
+testLoad :: Test
+testLoad = TestLabel "testLoad" $ TestCase $ do
+    qrs <- queriesLoad "test/data/test.sql"
+    assertEqual "count" 2 (size qrs)
+    assertEqual "foo" "select foo\nfrom bar" (mapGet qrs "selectFoo")
+    assertEqual "foo" "update bar\nset foo = 42" (mapGet qrs "updateBar")
+    return ()
+
+queriesTest :: Test
+queriesTest = TestLabel "QueriesTest" (TestList
+    [ testLoad
     ])
+
