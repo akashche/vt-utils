@@ -12,6 +12,9 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
+--
+-- |
+-- HUnit utilities
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
@@ -44,18 +47,52 @@ labelFilter grlabel gr  =
             <> " label: [" <> grlabel <>"]"
             <> " paths: [" <> textShow (testCasePaths gr) <> "]")
 
+-- | Runs all HUnit tests from a specified Vector
+--
+-- Tests results are printed to stdout
+--
+-- Arguments:
+--
+--    * @tests :: Vector Test@: HUnit tests to run
+--
 hunitRun :: Vector Test -> IO ()
 hunitRun tests = do
     _ <- runTestTT (TestList (toList tests))
     return ()
 
+-- | Runs a subset of HUnit tests with a specified label value
+--
+-- Throws an error if no tests in the specified Vector have specified label
+--
+-- Tests results are printed to stdout
+--
+-- Arguments:
+--
+--    * @tests :: Vector Test@: HUnit tests
+--    * @label :: Text@: Group label
+--
 hunitRunGroup :: Vector Test -> Text -> IO ()
-hunitRunGroup tests grlabel = do
-    let grtests = (filter (labelFilter grlabel) tests)
+hunitRunGroup tests label = do
+    let grtests = (filter (labelFilter label) tests)
     when (0 == (length grtests))
-        ((error . unpack) ("Test group not found, label: [" <> grlabel <> "]"))
+        ((error . unpack) ("Test group not found, label: [" <> label <> "]"))
+    when (1 /= (length grtests))
+        ((error . unpack) ("Invalid duplicated group, label: [" <> label <> "]"))
     hunitRun grtests
 
+-- | Runs a single test from a specified Vector of HUnit tests
+--
+-- Throws an error if a test with a specified group label and test label is not found
+-- in specified Vector of tests
+--
+-- Tests results are printed to stdout
+--
+-- Arguments:
+--
+--    * @tests :: Vector Test@: HUnit tests
+--    * @grlabel :: Text@: Group label
+--    * @tslabel :: Text@: Test label
+--
 hunitRunSingle :: Vector Test -> Text -> Text -> IO ()
 hunitRunSingle tests grlabel tslabel = do
     let grtests = (filter (labelFilter grlabel) tests)
@@ -74,6 +111,26 @@ hunitRunSingle tests grlabel tslabel = do
             <> " label: [" <> grlabel <>"]"
             <> " paths: [" <> textShow (testCasePaths gr) <> "]")
 
+-- | Runs all, group or one of specified HUnit tests depending on the command line arguments
+--
+-- Example specifying argument to @stack test@ invocation:
+--
+-- > stack test --ta "GroupName testName"
+--
+-- If no arguments are specified - all test are run.grlabel
+--
+-- If single argument is specified - it is interpreted as a name of the group.grlabel
+--
+-- If two argument are specified - first one is interpreted as a group name, and second one as a test name
+--
+-- Throws an error on invalid command line argument
+--
+-- Tests results are printed to stdout
+--
+-- Arguments:
+--
+--    * @tests :: Vector Test@: HUnit tests to run
+--
 hunitMain :: Vector Test -> IO()
 hunitMain tests = do
     args <- (fmap pack) <$> fromList <$> getArgs

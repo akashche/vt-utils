@@ -12,6 +12,9 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
+--
+-- |
+-- Filesystem utilities
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
@@ -30,6 +33,16 @@ import System.Directory (copyFile, createDirectory, doesDirectoryExist, listDire
 
 import VtUtils.Path
 
+-- | Copies a directory recursively
+--
+-- Throws an exception if source directory does not exist
+-- or if destination path already exists
+--
+-- Arguments:
+--
+--    * @src :: Text@: Source directory
+--    * @dest :: Text@: Destination path
+--
 fsCopyDirectory :: Text -> Text -> IO ()
 fsCopyDirectory src dest = do
     srcex <- doesDirectoryExist (unpack src)
