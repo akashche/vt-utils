@@ -15,6 +15,7 @@
 --
 -- |
 -- HUnit utilities
+--
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}

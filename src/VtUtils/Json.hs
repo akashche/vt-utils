@@ -16,7 +16,7 @@
 -- |
 -- JSON utilities
 --
--- Example of the data type, that supports JSON encoding/decoding with [Aeson](https://hackage.haskell.org/package/aeson):
+-- Example of the data type, that supports JSON encoding and decoding with [Aeson](https://hackage.haskell.org/package/aeson):
 --
 -- >   data Foo = Foo
 -- >       { foo :: Int

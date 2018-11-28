@@ -12,6 +12,10 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
+--
+-- |
+-- Additional combinators and utilities for @Parsec@ library
+--
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
@@ -52,6 +56,20 @@ import VtUtils.Text
 
 -- combinators
 
+-- | Finds a line containing a specified substring
+--
+-- Uses @LF@ as a line separator
+--
+-- Consumes whitespace after the line found
+--
+-- Resulting line doesn't contain a line separator
+--
+-- Arguments:
+--
+--    * @needle :: Text@: Substring to find
+--
+-- Return value: Line that contains a specified substring
+--
 parsecLineContains :: Text -> Parser Text
 parsecLineContains needle = do
     line <- pack <$> manyTill (noneOf ['\n']) (char '\n')
@@ -61,6 +79,22 @@ parsecLineContains needle = do
     else
         parsecLineContains needle
 
+-- | Finds a line with a specified prefix
+--
+-- Uses @LF@ as a line separator
+--
+-- Whitespace is stripped from the start of each line before checking for prefix
+--
+-- Consumes whitespace after the line found
+--
+-- Resulting line doesn't contain a line separator
+--
+-- Arguments:
+--
+--    * @prefix :: Text@: Prefix to find
+--
+-- Return value: Line with the specified prefix
+--
 parsecLinePrefix :: Text -> Parser Text
 parsecLinePrefix prefix = do
     line <- pack <$> manyTill (noneOf ['\n']) (char '\n')
@@ -70,6 +104,22 @@ parsecLinePrefix prefix = do
     else
         parsecLinePrefix prefix
 
+-- | Finds a line that does not have a specified prefix
+--
+-- Uses @LF@ as a line separator
+--
+-- Whitespace is stripped from the start of each line before checking for prefix
+--
+-- Consumes whitespace after the line found
+--
+-- Resulting line doesn't contain a line separator
+--
+-- Arguments:
+--
+--    * @prefix :: Text@: Prefix that should be skipped
+--
+-- Return value: First line that does not have a specified prefix
+--
 parsecLineNoPrefix :: Text -> Parser Text
 parsecLineNoPrefix prefix = do
     line <- pack <$> manyTill (noneOf ['\n']) (char '\n')
@@ -79,38 +129,79 @@ parsecLineNoPrefix prefix = do
         parsecWhitespace
         return line
 
+-- | Skips a specified number of lines
+--
+-- Uses @LF@ as a line separator
+--
+-- Does not consume additional whitespace after the last line skipped (or between the lines)
+--
+-- Arguments:
+--
+--    * @count :: Int@: Number of lines to skip
+--
 parsecSkipLines :: Int -> Parser ()
 parsecSkipLines count =
     if count > 0 then do
         _ <- manyTill (noneOf ['\n']) (char '\n')
         parsecSkipLines (count - 1)
     else do
-        parsecWhitespace
         return ()
 
--- warning: all look-ahead data is kept in memory
+-- | Skips all input until the specified substring is found
+--
+-- Warning: all look-ahead data is kept in memory
+--
+-- Arguments:
+--
+--    * @needle :: Text@: Substring to find
+--
+-- Return value: First line that does not have a specified prefix
+--
 parsecSkipManyTill :: Text -> Parser ()
-parsecSkipManyTill end = do
+parsecSkipManyTill needle = do
     scan
-    parsecWhitespace
     return ()
     where
         scan = done <|> recur
         done = do
-            _ <- try (lookAhead (string (unpack end)))
+            _ <- try (lookAhead (string (unpack needle)))
             return ()
         recur = do
             _ <- anyChar
             scan
             return ()
 
+-- | The parser @parsecTry p@ behaves like parser p, except that it pretends
+-- that it hasn't consumed any input when an error occurs
+--
+-- This is a re-export of [Text.Parsec.try](https://hackage.haskell.org/package/parsec-3.1.13.0/docs/Text-Parsec.html#v:try)
+-- under a different name to not conflict with [Control.Exception.try](https://hackage.haskell.org/package/base-4.12.0.0/docs/Control-Exception.html#v:try)
+--
+-- Arguments:
+--
+--    * @parser :: Parser a@: Parser to wrap into @try@
+--
+-- Return value: Resulting value from the specified parser
+--
 parsecTry :: Parser a -> Parser a
 parsecTry = try
 
--- lexeme may be used instead
+-- | Skips one or more whitespace characters
+--
+-- Note: Lexemes from [Text.Parsec.Token.TokenParser](https://hackage.haskell.org/package/parsec-3.1.13.0/docs/Text-Parsec-Token.html#v:TokenParser)
+-- can be used instead
+--
 parsecWhitespace :: Parser ()
 parsecWhitespace = skipMany (oneOf [' ', '\t', '\n', '\r'])
 
+-- | Formats @ParseError@ into @Text@ string
+--
+-- Arguments:
+--
+--    * @err :: ParseError@: @ParseError@ thrown by @Parsec@
+--
+-- Return value: @Text@ representation of a specified error
+--
 parsecErrorToText :: ParseError -> Text
 parsecErrorToText err =
     toStrict $ toLazyText $
@@ -132,6 +223,17 @@ parsecErrorToText err =
         commaList = intersperse (fromText ", ") builderList
         msg = foldl' (<>) (fromText "") commaList
 
+-- | Lazily reads contents from a specified file and parses it using the specified parser
+--
+-- File contents are decoded as @UTF-8@
+--
+-- Arguments:
+--
+--    * @parser :: Parser a@: Parser to use for the contents of the file
+--    * @path :: ParseError@: Path to a file to parse
+--
+-- Return value: Resulting value from the specified parser
+--
 parsecParseFile :: Parser a -> Text -> IO a
 parsecParseFile parser path =
     ioWithFileText path $ \tx ->
@@ -139,6 +241,17 @@ parsecParseFile parser path =
             Left err -> (error . unpack) (parsecErrorToText err)
             Right res -> return res
 
+-- | Parser a specified strict @Text@ string using a specified parser
+--
+-- Note: parser is typed on a lazy @Text@ input (so it can also be used with @parsecParseFile@)
+--
+-- Arguments:
+--
+--    * @parser :: Parser a@: Parser to use for the contents of the file
+--    * @text :: Text@: @Text@ string to parse
+--
+-- Return value: Resulting value from the specified parser
+--
 parsecParseText :: Parser a -> Text -> a
 parsecParseText parser text =
     case parse parser "" (fromChunks [text]) of
