@@ -60,9 +60,9 @@ hunitRun tests = do
     _ <- runTestTT (TestList (toList tests))
     return ()
 
--- | Runs a subset of HUnit tests with a specified label value
+-- | Runs a subset of @HUnit@ tests with a specified label value
 --
--- Throws an error if no tests in the specified Vector have specified label
+-- Throws an error if no tests in the specified @Vector@ have specified label
 --
 -- Tests results are printed to stdout
 --
@@ -80,7 +80,7 @@ hunitRunGroup tests label = do
         ((error . unpack) ("Invalid duplicated group, label: [" <> label <> "]"))
     hunitRun grtests
 
--- | Runs a single test from a specified Vector of HUnit tests
+-- | Runs a single test from a specified @Vector@ of @HUnit@ tests
 --
 -- Throws an error if a test with a specified group label and test label is not found
 -- in specified Vector of tests
@@ -111,11 +111,13 @@ hunitRunSingle tests grlabel tslabel = do
             <> " label: [" <> grlabel <>"]"
             <> " paths: [" <> textShow (testCasePaths gr) <> "]")
 
--- | Runs all, group or one of specified HUnit tests depending on the command line arguments
+-- | Runs all, group or one of specified @HUnit@ tests depending on the command line arguments
 --
 -- Example specifying argument to @stack test@ invocation:
 --
+-- >
 -- > stack test --ta "GroupName testName"
+-- >
 --
 -- If no arguments are specified - all test are run.grlabel
 --
@@ -131,7 +133,7 @@ hunitRunSingle tests grlabel tslabel = do
 --
 --    * @tests :: Vector Test@: HUnit tests to run
 --
-hunitMain :: Vector Test -> IO()
+hunitMain :: Vector Test -> IO ()
 hunitMain tests = do
     args <- (fmap pack) <$> fromList <$> getArgs
     case (length args) of
