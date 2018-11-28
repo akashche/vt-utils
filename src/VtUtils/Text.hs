@@ -12,6 +12,10 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
+--
+-- |
+-- Text utilities
+--
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
@@ -30,6 +34,17 @@ import Data.Text (Text, pack)
 import Data.Text.Encoding (decodeUtf8)
 import Data.Typeable (Typeable, cast)
 
+-- | Stringifies a specified value
+--
+-- If input is @Text@, @String@ or @ByteString@, it is returned as a
+-- @Text@ string without additional quotes around it
+--
+-- Arguments:
+--
+--    * @val :: a@: Value to stringify
+--
+-- Return value: @Text@ string representation of a specified value
+--
 textShow :: (Show a, Typeable a) => a -> Text
 textShow val
     | isJust castedText = fromJust castedText

@@ -12,6 +12,10 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
+--
+-- |
+-- SQL queries files utilities
+--
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
@@ -58,6 +62,35 @@ queries = do
     li <- many1 singleQuery
     return (fromList li)
 
+-- | Parses a specified SQL file into a @HashMap@ that contains
+-- all SQL queries as map entries
+--
+-- SQL file example:
+--
+-- >
+-- >   --
+-- >   -- test queries
+-- >   --
+-- >
+-- >   /** selectFoo */
+-- >   select foo
+-- >   from bar
+-- >
+-- >   /** updateBar */
+-- >   update bar
+-- >   set foo = 42
+-- >
+--
+-- Note: there must be an empty line after the initial comment lines on the top of the file
+--
+-- Throws an error on file IO error or parsing error
+--
+-- Arguments:
+--
+--    * @path :: Text@: Path to SQL file
+--
+-- Return value: @HashMap@ containing SQL queries from a file
+--
 queriesLoad :: Text -> IO Queries
 queriesLoad path = do
     qrs <- parsecParseFile queries path

@@ -45,11 +45,11 @@ testConcat = TestLabel "testConcat" $ TestCase $ do
 
 testPrepend :: Test
 testPrepend = TestLabel "testPrepend" $ TestCase $ do
-    assertEqual "prepend1" "foo/bar" (pathPrepend "foo" "bar")
-    assertEqual "prepend2" "foo/bar" (pathPrepend "foo/" "bar")
-    assertEqual "prepend3" "/bar" (pathPrepend "foo" "/bar")
-    assertEqual "prepend4" "c:\\bar" (pathPrepend "foo" "c:\\bar")
-    assertEqual "prepend5" "c:/bar" (pathPrepend "foo" "c:/bar")
+    assertEqual "prepend1" "/foo/bar" (pathPrepend "/foo" "bar")
+    assertEqual "prepend2" "/foo/bar" (pathPrepend "/foo/" "bar")
+    assertEqual "prepend3" "/bar" (pathPrepend "/foo" "/bar")
+    assertEqual "prepend4" "c:\\bar" (pathPrepend "/foo" "c:\\bar")
+    assertEqual "prepend5" "c:/bar" (pathPrepend "/foo" "c:/bar")
     return ()
 
 pathTest :: Test

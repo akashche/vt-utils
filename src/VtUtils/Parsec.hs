@@ -227,6 +227,8 @@ parsecErrorToText err =
 --
 -- File contents are decoded as @UTF-8@
 --
+-- Throws an error on file IO error or parsing error
+--
 -- Arguments:
 --
 --    * @parser :: Parser a@: Parser to use for the contents of the file
@@ -244,6 +246,8 @@ parsecParseFile parser path =
 -- | Parser a specified strict @Text@ string using a specified parser
 --
 -- Note: parser is typed on a lazy @Text@ input (so it can also be used with @parsecParseFile@)
+--
+-- Throws an error on parsing error
 --
 -- Arguments:
 --
