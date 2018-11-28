@@ -20,6 +20,8 @@ license:             MIT
 author:              "akashche at redhat.com"
 maintainer:          "akashche at redhat.com"
 copyright:           "2018 akashche at redhat.com"
+category:            Utils
+synopsis:            "Vector and Text utilities"
 
 extra-source-files:
 - README.md
