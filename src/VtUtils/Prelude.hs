@@ -36,9 +36,9 @@ module VtUtils.Prelude
     -- Control.Monad.ST
     , runST
     -- Data.Aeson
-    , FromJSON, Object, ToJSON
+    , FromJSON, ToJSON, Value
     , (.=)
-    , object
+    , object, parseJSON, toJSON
     -- Data.ByteString
     , ByteString
     -- Data.HashMap.Strict
@@ -79,12 +79,18 @@ module VtUtils.Prelude
     , Generic
     -- VtUtils.Date
     , dateFormat, dateFormatISO8601, dateParseISO8601
+    -- VtUtils.FS
+    , fsCopyDirectory
     -- VtUtils.IO
     , ioWithFileBytes, ioWithFileText
     -- VtUtils.Json
     , jsonDecodeFile,jsonDecodeText, jsonEncodeText, jsonGet
     -- VtUtils.Map
     , mapGet
+    -- VtUtils.Parsec
+    , Parser
+    , parsecLineContains, parsecLinePrefix, parsecLineNoPrefix, parsecSkipLines, parsecSkipManyTill
+    , parsecTry, parsecWhitespace, parsecErrorToText, parsecParseFile, parsecParseText
     -- VtUtils.Path
     , pathIsAbsolute, pathConcat, pathPrepend
     -- VtUtils.Text
@@ -100,7 +106,7 @@ import Prelude
 import Control.Exception (SomeException, bracket, bracket_, throw, try)
 import Control.Monad (forM, forM_, unless, when)
 import Control.Monad.ST (runST)
-import Data.Aeson (FromJSON, Object, ToJSON, (.=), object)
+import Data.Aeson (FromJSON, ToJSON, Value, (.=), object, parseJSON, toJSON)
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict (HashMap, lookup)
 import Data.Int (Int64)
@@ -119,8 +125,11 @@ import Foreign.C.String (CString)
 import GHC.Generics (Generic)
 
 import VtUtils.Date (dateFormat, dateFormatISO8601, dateParseISO8601)
+import VtUtils.FS (fsCopyDirectory)
 import VtUtils.IO (ioWithFileBytes, ioWithFileText)
 import VtUtils.Json (jsonDecodeFile,jsonDecodeText, jsonEncodeText, jsonGet)
 import VtUtils.Map (mapGet)
+import VtUtils.Parsec (Parser, parsecLineContains, parsecLinePrefix, parsecLineNoPrefix, parsecSkipLines
+    , parsecSkipManyTill, parsecTry, parsecWhitespace, parsecErrorToText, parsecParseFile, parsecParseText )
 import VtUtils.Path (pathIsAbsolute, pathConcat, pathPrepend)
 import VtUtils.Text (textShow)
