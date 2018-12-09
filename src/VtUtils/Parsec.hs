@@ -60,8 +60,6 @@ import VtUtils.Text
 --
 -- Uses @LF@ as a line separator
 --
--- Consumes whitespace after the line found
---
 -- Resulting line doesn't contain a line separator
 --
 -- Arguments:
@@ -74,7 +72,6 @@ parsecLineContains :: Text -> Parser Text
 parsecLineContains needle = do
     line <- pack <$> manyTill (noneOf ['\n']) (char '\n')
     if isInfixOf needle line then do
-        parsecWhitespace
         return line
     else
         parsecLineContains needle
@@ -84,8 +81,6 @@ parsecLineContains needle = do
 -- Uses @LF@ as a line separator
 --
 -- Whitespace is stripped from the start of each line before checking for prefix
---
--- Consumes whitespace after the line found
 --
 -- Resulting line doesn't contain a line separator
 --
@@ -99,7 +94,6 @@ parsecLinePrefix :: Text -> Parser Text
 parsecLinePrefix prefix = do
     line <- pack <$> manyTill (noneOf ['\n']) (char '\n')
     if isPrefixOf prefix (stripStart line) then do
-        parsecWhitespace
         return line
     else
         parsecLinePrefix prefix
@@ -109,8 +103,6 @@ parsecLinePrefix prefix = do
 -- Uses @LF@ as a line separator
 --
 -- Whitespace is stripped from the start of each line before checking for prefix
---
--- Consumes whitespace after the line found
 --
 -- Resulting line doesn't contain a line separator
 --
@@ -126,7 +118,6 @@ parsecLineNoPrefix prefix = do
     if isPrefixOf prefix (stripStart line) then
         parsecLineNoPrefix prefix
     else do
-        parsecWhitespace
         return line
 
 -- | Skips a specified number of lines
