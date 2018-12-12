@@ -25,14 +25,16 @@
 
 module VtUtils.Prelude
     ( Bool(True, False), Either(Left, Right), Eq, Int, IO, Maybe(Just, Nothing), Read, Show, String
-    , (+), (-), (*), (/), (>), (>=), (<), (<=), (==), (/=), (.), ($), ($!), (>>), (>>=), (&&), (||), (<$>), (<*>)
-    , abs, div, error, flip, fmap, fromIntegral, id, mapM, mapM_, mod, not, otherwise
-    , pure, read, return, seq, sequence, sequence_, show, undefined
+    , (+), (-), (*), (/), (>), (.), ($), (<)
+    , (>=), (<=), (==), (/=), ($!), (>>)
+    , (>>=), (&&), (||), (<$>), (<*>)
+    , abs, div, error, flip, fmap, fromIntegral, id, length, mapM, mapM_, mod
+    , not, otherwise, pure, read, return, seq, sequence, sequence_, show, undefined
     -- Control.Exception
     , SomeException
     , bracket, bracket_, throw, try
     -- Control.Monad
-    , forM, forM_, unless, when
+    , forM, forM_, mfilter, unless, when
     -- Control.Monad.ST
     , runST
     -- Data.Aeson
@@ -41,6 +43,8 @@ module VtUtils.Prelude
     , object, parseJSON, toJSON
     -- Data.ByteString
     , ByteString
+    -- Data.Foldable
+    , foldl', foldr'
     -- Data.HashMap.Strict
     , HashMap
     , lookup
@@ -50,6 +54,7 @@ module VtUtils.Prelude
     , fromJust, isJust
     -- Data.Monoid
     , (<>)
+    , mconcat
     -- Data.Text
     , Text
     , pack, unpack
@@ -70,7 +75,7 @@ module VtUtils.Prelude
     -- Data.Vector
     , Vector
     , (!)
-    , fromList, toList
+    , fromList, ifoldl', toList
     -- Debug.Trace
     , trace
     -- Foreign.C.String
@@ -99,19 +104,22 @@ module VtUtils.Prelude
 
 import Prelude
     ( Bool(True, False), Either(Left, Right), Eq, Int, IO, Maybe(Just, Nothing), Read, Show, String
-    , (+), (-), (*), (/), (>), (>=), (<), (<=), (==), (/=), (.), ($), ($!), (>>), (>>=), (&&), (&&), (||), (<$>), (<*>)
-    , abs, div, error, flip, fmap, fromIntegral, id, mapM, mapM_, mod, not, otherwise
-    , pure, read, return, seq, sequence, sequence_, show, undefined
+    , (+), (-), (*), (/), (>), (.), ($), (<)
+    , (>=), (<=), (==), (/=), ($!), (>>)
+    , (>>=), (&&), (||), (<$>), (<*>)
+    , abs, div, error, flip, fmap, fromIntegral, id, length, mapM, mapM_, mod
+    , not, otherwise, pure, read, return, seq, sequence, sequence_, show, undefined
     )
 import Control.Exception (SomeException, bracket, bracket_, throw, try)
-import Control.Monad (forM, forM_, unless, when)
+import Control.Monad (forM, forM_, mfilter, unless, when)
 import Control.Monad.ST (runST)
 import Data.Aeson (FromJSON, ToJSON, Value, (.=), object, parseJSON, toJSON)
 import Data.ByteString (ByteString)
+import Data.Foldable (foldl', foldr')
 import Data.HashMap.Strict (HashMap, lookup)
 import Data.Int (Int64)
 import Data.Maybe (fromJust, isJust)
-import Data.Monoid ((<>))
+import Data.Monoid ((<>), mconcat)
 import Data.Text (Text, pack, unpack)
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Data.Text.IO (appendFile, putStrLn, readFile, writeFile)
@@ -119,7 +127,7 @@ import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy.Builder (Builder, fromText, fromLazyText, fromString, toLazyText)
 import Data.Time.Clock (UTCTime, getCurrentTime)
 import Data.Typeable (Typeable, cast)
-import Data.Vector (Vector, (!), fromList, toList)
+import Data.Vector (Vector, (!), fromList, ifoldl', toList)
 import Debug.Trace (trace)
 import Foreign.C.String (CString)
 import GHC.Generics (Generic)
