@@ -40,4 +40,3 @@ queriesTest :: Test
 queriesTest = TestLabel "QueriesTest" (TestList
     [ testLoad
     ])
-

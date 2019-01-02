@@ -29,7 +29,7 @@ module VtUtils.Date
     , dateParseISO8601
     ) where
 
-import Prelude (Bool(False), Maybe(..), (.), error)
+import Prelude (Bool(False), Maybe(..), (.), ($), error)
 import Data.Monoid ((<>))
 import Data.Text (Text, pack, unpack)
 import Data.Time.Clock (UTCTime)
@@ -83,4 +83,4 @@ dateParseISO8601 :: Text -> UTCTime
 dateParseISO8601 text =
     case parseTimeM False defaultTimeLocale (unpack iso8601) (unpack text) :: Maybe UTCTime of
         Just tm -> tm
-        Nothing -> (error . unpack) ("Error parsing ISO8601 format, date: [" <> text <> "]")
+        Nothing -> error . unpack $ "Error parsing ISO8601 format, date: [" <> text <> "]"

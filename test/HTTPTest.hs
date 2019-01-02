@@ -19,37 +19,19 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
 
-import Prelude (IO)
-import Data.Vector (fromList)
-import VtUtils.HUnit (hunitMain)
+module HTTPTest ( httpTest ) where
 
-import HUnitTest
-import DateTest
-import FSTest
-import HTTPTest
-import IOTest
-import JSONTest
-import MapTest
-import ParsecTest
-import PathTest
-import PreludeTest
-import ProcessTest
-import QueriesTest
-import TextTest
+import Test.HUnit
+import Prelude (return, ($))
 
-main :: IO ()
-main = hunitMain (fromList
-    [ hunitTest
-    , dateTest
-    , fsTest
-    , httpTest
-    , ioTest
-    , jsonTest
-    , mapTest
-    , parsecTest
-    , pathTest
-    , preludeTest
-    , processTest
-    , queriesTest
-    , textTest
+-- import VtUtils.HTTP
+
+testContentTypeJSON :: Test
+testContentTypeJSON = TestLabel "testContentTypeJSON" $ TestCase $ do
+    return ()
+
+httpTest :: Test
+httpTest = TestLabel "HTTPTest" (TestList
+    [ testContentTypeJSON
     ])
+

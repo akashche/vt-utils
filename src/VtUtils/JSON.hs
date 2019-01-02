@@ -32,7 +32,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
 
-module VtUtils.Json
+module VtUtils.JSON
     ( jsonDecodeFile
     , jsonDecodeText
     , jsonEncodeText
@@ -40,14 +40,15 @@ module VtUtils.Json
     ) where
 
 import Prelude (Either(..), IO, String, (.), error, return)
-import Data.Aeson (FromJSON, Value(..), ToJSON, eitherDecode, encode)
+import Data.Aeson (FromJSON, Value(..), ToJSON, eitherDecode)
+import Data.Aeson.Encode.Pretty (encodePrettyToTextBuilder)
 import Data.Aeson.Types ((.:), parseEither)
+import Data.ByteString.Lazy (fromChunks)
 import Data.Monoid ((<>))
 import Data.Text (Text, pack, unpack)
-import Data.Text.Encoding (decodeUtf8, encodeUtf8)
-
-import qualified Data.ByteString as ByteString
-import qualified Data.ByteString.Lazy as ByteStringLazy
+import Data.Text.Encoding (encodeUtf8)
+import Data.Text.Lazy (toStrict)
+import Data.Text.Lazy.Builder (toLazyText)
 
 import VtUtils.IO
 
@@ -64,7 +65,7 @@ import VtUtils.IO
 -- Return value: JSON @Text@ string
 --
 jsonEncodeText :: ToJSON a => a -> Text
-jsonEncodeText = decodeUtf8 . ByteString.concat . ByteStringLazy.toChunks . encode
+jsonEncodeText = toStrict . toLazyText . encodePrettyToTextBuilder
 
 -- | Parses a JSON @Text@ string into a typed data
 --
@@ -86,7 +87,7 @@ jsonEncodeText = decodeUtf8 . ByteString.concat . ByteStringLazy.toChunks . enco
 --
 -- Return value: Decoded data
 --
-jsonDecodeText :: forall a . (FromJSON a) => Text -> a
+jsonDecodeText :: forall a . FromJSON a => Text -> a
 jsonDecodeText text =
     case eitherDecode bs :: Either String a of
         Left err -> (error . unpack)
@@ -94,7 +95,7 @@ jsonDecodeText text =
             <> " message: [" <> pack err <> "]")
         Right res -> res
     where
-        bs = ByteStringLazy.fromChunks [encodeUtf8 text]
+        bs = fromChunks [encodeUtf8 text]
 
 -- | Parses contents of a specified JSON file into a typed data
 --
@@ -118,7 +119,7 @@ jsonDecodeText text =
 --
 -- Return value: Decoded data
 --
-jsonDecodeFile :: forall a . (FromJSON a) => Text -> IO a
+jsonDecodeFile :: forall a . FromJSON a => Text -> IO a
 jsonDecodeFile path =
     ioWithFileBytes path fun
     where
@@ -154,7 +155,7 @@ jsonDecodeFile path =
 --
 -- Return value: Field value
 --
-jsonGet :: forall a . (FromJSON a) => Value -> Text -> a
+jsonGet :: forall a . FromJSON a => Value -> Text -> a
 jsonGet val field =
     case val of
         Object obj -> case parseEither (.: field) obj :: Either String a of

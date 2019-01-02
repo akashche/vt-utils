@@ -19,7 +19,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
 
-module JsonTest ( jsonTest ) where
+module JSONTest ( jsonTest ) where
 
 import Test.HUnit
 import Prelude (Int, IO, ($), return)
@@ -27,7 +27,7 @@ import Data.Aeson (FromJSON, ToJSON, (.=), object)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 
-import VtUtils.Json
+import VtUtils.JSON
 
 data Foo = Foo
     { foo :: Int
@@ -38,6 +38,9 @@ instance ToJSON Foo
 
 objText :: Text
 objText = "{\"foo\":42,\"bar\":\"baz\"}"
+
+objTextPretty :: Text
+objTextPretty = "{\n    \"foo\": 42,\n    \"bar\": \"baz\"\n}"
 
 testDecodeFile :: Test
 testDecodeFile = TestLabel "testDecodeFile" $ TestCase $ do
@@ -57,7 +60,7 @@ testEncodeText :: Test
 testEncodeText = TestLabel "testEncodeText" $ TestCase $ do
     let obj = Foo 42 "baz"
     let encoded = jsonEncodeText obj
-    assertEqual "encode" objText encoded
+    assertEqual "encode" objTextPretty encoded
     return ()
 
 testJsonGet :: Test
