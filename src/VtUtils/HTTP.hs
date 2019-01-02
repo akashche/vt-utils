@@ -31,9 +31,13 @@ module VtUtils.HTTP
     , httpRequestBodyJSON
     , httpRequestHeaders
     , httpRequestHeadersMap
+    -- client
+    , httpResponseBody
+    , httpResponseBodyText
     ) where
 
-import Prelude (Either(..), IO, String, (.), (<$>), fst, error, return, snd)
+import Prelude (Either(..), Int, IO, String, (+), (.), (>), ($), (<$>), fst, fromIntegral, error, return, snd)
+import Control.Monad (when)
 import Data.Aeson (FromJSON, eitherDecode)
 import Data.CaseInsensitive (original)
 import Data.HashMap.Strict (HashMap)
@@ -42,9 +46,14 @@ import Data.Monoid ((<>))
 import Data.Text (Text, pack, unpack)
 import Data.Text.Encoding (decodeUtf8)
 import Data.Vector (Vector)
-import qualified Data.Vector as Vector
+import Network.HTTP.Client (BodyReader, brRead, brReadSome)
 import Network.HTTP.Types (Header)
 import Network.Wai (Request, lazyRequestBody, rawPathInfo, requestBody, requestHeaders)
+import qualified Data.ByteString.Lazy as ByteStringLazy
+import qualified Data.ByteString as ByteString
+import qualified Data.Vector as Vector
+
+import VtUtils.Text
 
 httpContentTypeJSON :: Header
 httpContentTypeJSON = ("Content-Type", "application/json")
@@ -77,3 +86,21 @@ httpRequestHeaders = Vector.fromList . httpRequestHeadersList
 
 httpRequestHeadersMap :: Request -> HashMap Text Text
 httpRequestHeadersMap = HashMap.fromList . httpRequestHeadersList
+
+httpResponseBody :: Text -> BodyReader -> Int -> IO ByteStringLazy.ByteString
+httpResponseBody label reader threshold = do
+    lbs <- brReadSome reader threshold
+    rem <- ByteString.length <$> brRead reader
+    let read = (ByteStringLazy.length lbs) + (fromIntegral rem)
+    when (rem > 0) $ error . unpack $
+           "HTTP response size threshold exceeded,"
+        <> " threshold: [" <> (textShow threshold) <> "],"
+        <> " read: [" <> (textShow read) <> "],"
+        <> " label: [" <> label <> "]"
+    return lbs
+
+httpResponseBodyText :: Text -> BodyReader -> Int -> IO Text
+httpResponseBodyText label reader threshold = do
+    lbs <- httpResponseBody label reader threshold
+    let tx = decodeUtf8 (ByteStringLazy.toStrict lbs)
+    return tx

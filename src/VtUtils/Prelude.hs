@@ -87,7 +87,7 @@ module VtUtils.Prelude
     , (!)
     , fromList, ifoldl', toList
     -- Data.Word
-    , Word(..), Word8(..), Word16(..), Word32(..), Word64(..)
+    , Word, Word8, Word16, Word32, Word64
     -- Debug.Trace
     , trace
     -- Foreign
@@ -104,11 +104,13 @@ module VtUtils.Prelude
     , alignment, peekByteOff, pokeByteOff, sizeOf
     -- GHC.Generics
     , Generic
+    -- Network.HTTP.Client
+    , Manager, newManager, parseRequest, responseBody, withResponse
     -- Network.Wai
     , Application, Request, RequestBodyLength(..)
     , lazyRequestBody, queryString, rawPathInfo, requestBody, requestBodyLength, requestHeaders, requestMethod, responseLBS
-    -- System.Environment
-    , getArgs
+    -- Text.Parsec
+    , (<|>), (<?>)
 
     -- VtUtils.Date
     , dateFormat, dateFormatISO8601, dateParseISO8601
@@ -118,7 +120,7 @@ module VtUtils.Prelude
     , fsCopyDirectory
     -- VtUtils.HTTP
     , httpContentTypeJSON, httpRequestPath, httpRequestBodyText, httpRequestBodyJSON
-    , httpRequestHeaders, httpRequestHeadersMap
+    , httpRequestHeaders, httpRequestHeadersMap, httpResponseBody, httpResponseBodyText
     -- VtUtils.IO
     , ioWithFileBytes, ioWithFileText
     -- VtUtils.JSON
@@ -167,7 +169,7 @@ import Data.Time.Clock (UTCTime, getCurrentTime)
 import Data.Time.Clock.POSIX (POSIXTime, posixSecondsToUTCTime, utcTimeToPOSIXSeconds)
 import Data.Typeable (Typeable, cast)
 import Data.Vector (Vector, (!), fromList, ifoldl', toList)
-import Data.Word (Word(..), Word8(..), Word16(..), Word32(..), Word64(..))
+import Data.Word (Word, Word8, Word16, Word32, Word64)
 import Debug.Trace (trace)
 import Foreign (Ptr, castPtr, newForeignPtr_, nullPtr, peek, poke, plusPtr, ptrToIntPtr)
 import Foreign.C.String (CString, CStringLen)
@@ -175,15 +177,16 @@ import Foreign.C.Types (CChar(..), CInt(..), CLong(..), CShort(..), CSize(..), C
 import Foreign.Marshal.Utils (copyBytes)
 import Foreign.Storable (Storable, alignment, peekByteOff, pokeByteOff, sizeOf)
 import GHC.Generics (Generic)
+import Network.HTTP.Client (Manager, newManager, parseRequest, responseBody, withResponse)
 import Network.Wai (Application, Request, RequestBodyLength(..)
     , lazyRequestBody, queryString, rawPathInfo, requestBody, requestBodyLength, requestHeaders, requestMethod, responseLBS)
-import System.Environment (getArgs)
+import Text.Parsec ((<|>), (<?>))
 
 import VtUtils.Date (dateFormat, dateFormatISO8601, dateParseISO8601)
 import VtUtils.FFI (ffiWithPtr, ffiWithPtrPtr, ffiWithUTF8, ffiWithUTF16)
 import VtUtils.FS (fsCopyDirectory)
 import VtUtils.HTTP (httpContentTypeJSON, httpRequestPath, httpRequestBodyText, httpRequestBodyJSON
-    , httpRequestHeaders, httpRequestHeadersMap)
+    , httpRequestHeaders, httpRequestHeadersMap, httpResponseBody, httpResponseBodyText)
 import VtUtils.IO (ioWithFileBytes, ioWithFileText)
 import VtUtils.JSON (jsonDecodeFile,jsonDecodeText, jsonEncodeText, jsonGet)
 import VtUtils.Map (mapGet)
