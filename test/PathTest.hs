@@ -53,8 +53,8 @@ testPrepend = TestLabel "testPrepend" $ TestCase $ do
     return ()
 
 pathTest :: Test
-pathTest = TestLabel "PathTest" (TestList
+pathTest = TestLabel "PathTest" $ TestList
     [ testIsAbsolute
     , testConcat
     , testPrepend
-    ])
+    ]

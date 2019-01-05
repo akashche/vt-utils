@@ -48,6 +48,6 @@ testSpawnAndWait = TestLabel "testSpawnAndWait" $ TestCase $ do
     return ()
 
 processTest :: Test
-processTest = TestLabel "ProcessTest" (TestList
+processTest = TestLabel "ProcessTest" $ TestList
     [ testSpawnAndWait
-    ])
+    ]

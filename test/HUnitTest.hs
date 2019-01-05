@@ -90,10 +90,10 @@ testRunSingle = TestLabel "testRunSingle" $ TestCase $ do
     return ()
 
 hunitTest :: Test
-hunitTest = TestLabel "HUnitTest" (TestList
+hunitTest = TestLabel "HUnitTest" $ TestList
     [ testMain
     , testRun
     , testRunGroup
     , testRunSingle
-    ])
+    ]
 

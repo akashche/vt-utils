@@ -45,7 +45,7 @@ testCopyDirectory = TestLabel "testCopyDirectory" $ TestCase $ do
             return ()
 
 fsTest :: Test
-fsTest = TestLabel "FSTest" (TestList
+fsTest = TestLabel "FSTest" $ TestList
     [ testCopyDirectory
-    ])
+    ]
 

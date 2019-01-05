@@ -35,6 +35,6 @@ testShow = TestLabel "testShow" $ TestCase $ do
     assertEqual "bytestring" "foo" (textShow ("foo" :: ByteString))
 
 textTest :: Test
-textTest = TestLabel "TextTest" (TestList
+textTest = TestLabel "TextTest" $ TestList
     [ testShow
-    ])
+    ]

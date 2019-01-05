@@ -19,12 +19,13 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
 
-import Prelude (IO)
+import Prelude (IO, ($))
 import Data.Vector (fromList)
 import VtUtils.HUnit (hunitMain)
 
 import HUnitTest
 import DateTest
+import FFITest
 import FSTest
 import HTTPTest
 import IOTest
@@ -38,9 +39,10 @@ import QueriesTest
 import TextTest
 
 main :: IO ()
-main = hunitMain (fromList
+main = hunitMain $ fromList
     [ hunitTest
     , dateTest
+    , ffiTest
     , fsTest
     , httpTest
     , ioTest
@@ -52,4 +54,4 @@ main = hunitMain (fromList
     , processTest
     , queriesTest
     , textTest
-    ])
+    ]

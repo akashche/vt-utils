@@ -47,11 +47,11 @@ import VtUtils.Path
 fsCopyDirectory :: Text -> Text -> IO ()
 fsCopyDirectory src dest = do
     srcex <- doesDirectoryExist (unpack src)
-    unless (srcex)
-        ((error . unpack) ("Source directory does not exist, src: [" <> src <> "]"))
+    unless (srcex) $ error . unpack $
+        "Source directory does not exist, src: [" <> src <> "]"
     destex <- doesDirectoryExist (unpack dest)
-    when (destex)
-        ((error . unpack) ("Dest directory already exists, dest: [" <> dest <> "]"))
+    when (destex) $ error . unpack $
+        "Dest directory already exists, dest: [" <> dest <> "]"
     createDirectory (unpack dest)
     children <- (fmap pack) <$> listDirectory (unpack src)
     forM_ children $ \child -> do

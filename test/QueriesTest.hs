@@ -37,6 +37,6 @@ testLoad = TestLabel "testLoad" $ TestCase $ do
     return ()
 
 queriesTest :: Test
-queriesTest = TestLabel "QueriesTest" (TestList
+queriesTest = TestLabel "QueriesTest" $ TestList
     [ testLoad
-    ])
+    ]

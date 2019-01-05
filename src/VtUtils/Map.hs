@@ -27,7 +27,7 @@ module VtUtils.Map
     ( mapGet
     ) where
 
-import Prelude (Maybe(..), (.), error)
+import Prelude (Maybe(..), (.), ($), error)
 import Data.HashMap.Strict (HashMap, lookup)
 import Data.Monoid ((<>))
 import Data.Text (Text, unpack)
@@ -48,4 +48,5 @@ mapGet :: HashMap Text v -> Text -> v
 mapGet map key =
     case lookup key map of
         Just res -> res
-        Nothing -> (error . unpack) ("Map entry not found, key: [" <> key <> "]")
+        Nothing -> error . unpack $
+            "Map entry not found, key: [" <> key <> "]"

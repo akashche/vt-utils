@@ -101,7 +101,7 @@ testParseText = TestLabel "testParseText" $ TestCase $ do
     return ()
 
 parsecTest :: Test
-parsecTest = TestLabel "ParsecTest" (TestList
+parsecTest = TestLabel "ParsecTest" $ TestList
     [ testLineContains
     , testLinePrefix
     , testLineNoPrefix
@@ -112,5 +112,5 @@ parsecTest = TestLabel "ParsecTest" (TestList
     , testErrorToText
     , testParseFile
     , testParseText
-    ])
+    ]
 

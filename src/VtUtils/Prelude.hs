@@ -47,6 +47,8 @@ module VtUtils.Prelude
     , FromJSON, ToJSON, Value
     , (.=)
     , object, parseJSON, toJSON
+    -- Data.Aeson.Encode.Pretty
+    , encodePretty
     -- Data.ByteString
     , ByteString
     , packCString, packCStringLen
@@ -105,10 +107,10 @@ module VtUtils.Prelude
     -- GHC.Generics
     , Generic
     -- Network.HTTP.Client
-    , Manager, newManager, parseRequest, responseBody, withResponse
+    , Manager, newManager, parseRequest_, withResponse
     -- Network.Wai
     , Application, Request, RequestBodyLength(..)
-    , lazyRequestBody, queryString, rawPathInfo, requestBody, requestBodyLength, requestHeaders, requestMethod, responseLBS
+    , lazyRequestBody, queryString, rawPathInfo, requestBodyLength, requestHeaders, requestMethod, responseLBS
     -- Text.Parsec
     , (<|>), (<?>)
 
@@ -154,6 +156,7 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.ST (runST)
 import Control.Monad.Trans.Class (lift)
 import Data.Aeson (FromJSON, ToJSON, Value, (.=), object, parseJSON, toJSON)
+import Data.Aeson.Encode.Pretty (encodePretty)
 import Data.ByteString (ByteString, packCString, packCStringLen)
 import Data.Foldable (foldl', foldr')
 import Data.HashMap.Strict (HashMap, lookup)
@@ -177,9 +180,9 @@ import Foreign.C.Types (CChar(..), CInt(..), CLong(..), CShort(..), CSize(..), C
 import Foreign.Marshal.Utils (copyBytes)
 import Foreign.Storable (Storable, alignment, peekByteOff, pokeByteOff, sizeOf)
 import GHC.Generics (Generic)
-import Network.HTTP.Client (Manager, newManager, parseRequest, responseBody, withResponse)
+import Network.HTTP.Client (Manager, newManager, parseRequest_, withResponse)
 import Network.Wai (Application, Request, RequestBodyLength(..)
-    , lazyRequestBody, queryString, rawPathInfo, requestBody, requestBodyLength, requestHeaders, requestMethod, responseLBS)
+    , lazyRequestBody, queryString, rawPathInfo, requestBodyLength, requestHeaders, requestMethod, responseLBS)
 import Text.Parsec ((<|>), (<?>))
 
 import VtUtils.Date (dateFormat, dateFormatISO8601, dateParseISO8601)

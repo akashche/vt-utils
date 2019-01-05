@@ -15,7 +15,7 @@
 --
 -- |
 -- Foreign Function Interface utilities
--- TODO
+--
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
@@ -39,6 +39,15 @@ import Foreign (Ptr, newForeignPtr_, nullPtr)
 import Foreign.C.String (CString)
 import Foreign.Storable (Storable)
 
+-- | Passes specified @Text@ string as a NUL-terminated UTF-8 string to the specified IO action
+--
+-- Arguments:
+--
+--    * @text :: Text@: Input string
+--    * @fun :: CString -> IO a@: IO action to run
+--
+-- Return value: Value returned from IO action
+--
 ffiWithUTF8 :: Text -> (CString -> IO a) -> IO a
 ffiWithUTF8 text fun =
     withCStringLen text $ \(ptr, len) -> do
@@ -48,6 +57,15 @@ ffiWithUTF8 text fun =
         write vec len 0
         unsafeWith vec fun
 
+-- | Passes specified @Text@ string as a NUL-terminated UTF-16 string to the specified IO action
+--
+-- Arguments:
+--
+--    * @text :: Text@: Input string
+--    * @fun :: Ptr Word16 -> IO a@: IO action to run
+--
+-- Return value: Value returned from IO action
+--
 ffiWithUTF16 :: Text -> (Ptr Word16 -> IO a) -> IO a
 ffiWithUTF16 text fun = do
     (fptr, tlen) <- asForeignPtr text
@@ -57,11 +75,28 @@ ffiWithUTF16 text fun = do
     write vec len 0
     unsafeWith vec fun
 
+-- | Passes specified @Storable@ value as a pointer (to that value) to the specified IO action
+--
+-- Arguments:
+--
+--    * @val :: Storable a@: Input value
+--    * @fun :: Ptr a -> IO b@: IO action to run
+--
+-- Return value: Value returned from IO action
+--
 ffiWithPtr :: Storable a => a -> (Ptr a -> IO b) -> IO b
 ffiWithPtr val fun = do
     vec <- replicate 1 val
     unsafeWith vec fun
 
+-- | Passes a pointer to a NULL pointer of a @Storable@ type to the specified IO action
+--
+-- Arguments:
+--
+--    * @fun :: Ptr (Ptr a) -> IO b@: IO action to run
+--
+-- Return value: Value returned from IO action
+--
 ffiWithPtrPtr :: (Ptr (Ptr a) -> IO b) -> IO b
 ffiWithPtrPtr fun = do
     vec <- replicate 1 (nullPtr :: Ptr a)

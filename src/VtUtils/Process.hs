@@ -14,8 +14,7 @@
 -- limitations under the License.
 --
 -- |
--- Process utilities
--- TODO
+-- Process spawning utilities
 --
 
 {-# LANGUAGE DeriveGeneric #-}
@@ -35,6 +34,16 @@ import System.Exit (ExitCode(..))
 import System.IO (IOMode(WriteMode), withFile)
 import System.Process (CreateProcess(..), StdStream(..), proc, waitForProcess, withCreateProcess)
 
+-- | Spawns a new process and waits for it to exit
+--
+-- Arguments:
+--
+--    * @executable :: Text@: Path to executable binary
+--    * @args :: Vector Text@: Arguments to pass to executable
+--    * @out :: Text@ Path to a file, where std output (both @stdout@ and @stderr@) will be written
+--
+-- Return value: Process exit code
+--
 processSpawnAndWait :: Text -> Vector Text -> Text -> IO Int
 processSpawnAndWait executable args out = do
     code <- withFile (unpack out) WriteMode $ \ha -> do

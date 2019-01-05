@@ -31,6 +31,6 @@ test1 = TestLabel "test" $ TestCase $ do
     assertEqual "prelude" (43 :: Int) (42 + 1)
 
 preludeTest :: Test
-preludeTest = TestLabel "PreludeTest" (TestList
+preludeTest = TestLabel "PreludeTest" $ TestList
     [ test1
-    ])
+    ]

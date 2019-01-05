@@ -83,4 +83,5 @@ dateParseISO8601 :: Text -> UTCTime
 dateParseISO8601 text =
     case parseTimeM False defaultTimeLocale (unpack iso8601) (unpack text) :: Maybe UTCTime of
         Just tm -> tm
-        Nothing -> error . unpack $ "Error parsing ISO8601 format, date: [" <> text <> "]"
+        Nothing -> error . unpack $
+            "Error parsing ISO8601 format, date: [" <> text <> "]"

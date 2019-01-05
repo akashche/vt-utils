@@ -67,4 +67,5 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - warp
     - vt-utils

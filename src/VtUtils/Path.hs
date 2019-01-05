@@ -29,7 +29,7 @@ module VtUtils.Path
     , pathPrepend
     ) where
 
-import Prelude (Bool(..), (.), (==), (&&), error, not, otherwise)
+import Prelude (Bool(..), (.), ($), (==), (&&), error, not, otherwise)
 import Data.Char (isAlphaNum)
 import Data.Monoid ((<>))
 import Data.Text (Text, head, index, last, length, unpack)
@@ -65,10 +65,10 @@ pathIsAbsolute path
 --
 pathConcat :: Text -> Text -> Text
 pathConcat prefix postfix
-    | pathIsAbsolute postfix = (error . unpack)
-        (  "Invalid path concatenation with absolute postfix,"
+    | pathIsAbsolute postfix = error . unpack $
+           "Invalid path concatenation with absolute postfix,"
         <> " prefix: [" <> prefix <> "]"
-        <> " postfix: [" <> postfix <> "]")
+        <> " postfix: [" <> postfix <> "]"
     | 0 == length prefix = postfix
     | 0 == length postfix = prefix
     | '/' == last prefix = prefix <> postfix
@@ -89,10 +89,10 @@ pathConcat prefix postfix
 pathPrepend :: Text -> Text -> Text
 pathPrepend prefix path =
     if not (pathIsAbsolute prefix) then
-        (error . unpack)
-            (  "Invalid non-absolute path prefix,"
+        error . unpack $
+               "Invalid non-absolute path prefix,"
             <> " prefix: [" <> prefix <> "]"
-            <> " path: [" <> path <> "]")
+            <> " path: [" <> path <> "]"
     else
         if pathIsAbsolute path then
             path

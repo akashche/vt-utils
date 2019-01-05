@@ -30,7 +30,7 @@ module VtUtils.HUnit
     , hunitRunSingle
     ) where
 
-import Prelude (Bool, IO, (==), (/=), (.), (<$>), error, fmap, return)
+import Prelude (Bool, IO, (==), (/=), (.), ($), (<$>), error, fmap, return)
 import Control.Monad (when)
 import Data.Monoid ((<>))
 import Data.Text (Text, pack, unpack)
@@ -44,9 +44,10 @@ labelFilter :: Text -> Test -> Bool
 labelFilter grlabel gr  =
     case gr of
         (TestLabel label _) -> ((pack label) == grlabel)
-        _ -> (error . unpack) ("Invalid test group,"
+        _ -> error . unpack $
+               "Invalid test group,"
             <> " label: [" <> grlabel <>"]"
-            <> " paths: [" <> textShow (testCasePaths gr) <> "]")
+            <> " paths: [" <> textShow (testCasePaths gr) <> "]"
 
 -- | Runs all HUnit tests from a specified Vector
 --
@@ -75,10 +76,10 @@ hunitRun tests = do
 hunitRunGroup :: Vector Test -> Text -> IO ()
 hunitRunGroup tests label = do
     let grtests = (filter (labelFilter label) tests)
-    when (0 == (length grtests))
-        ((error . unpack) ("Test group not found, label: [" <> label <> "]"))
-    when (1 /= (length grtests))
-        ((error . unpack) ("Invalid duplicated group, label: [" <> label <> "]"))
+    when (0 == (length grtests)) $ error . unpack $
+        "Test group not found, label: [" <> label <> "]"
+    when (1 /= (length grtests)) $ error . unpack $
+        "Invalid duplicated group, label: [" <> label <> "]"
     hunitRun grtests
 
 -- | Runs a single test from a specified @Vector@ of @HUnit@ tests
@@ -97,20 +98,21 @@ hunitRunGroup tests label = do
 hunitRunSingle :: Vector Test -> Text -> Text -> IO ()
 hunitRunSingle tests grlabel tslabel = do
     let grtests = (filter (labelFilter grlabel) tests)
-    when (0 == (length grtests))
-        ((error . unpack) ("Test group not found, label: [" <> grlabel <> "]"))
-    when (1 /= (length grtests))
-        ((error . unpack) ("Invalid duplicated group, label: [" <> grlabel <> "]"))
+    when (0 == (length grtests)) $ error . unpack $
+        "Test group not found, label: [" <> grlabel <> "]"
+    when (1 /= (length grtests)) $ error . unpack $
+        "Invalid duplicated group, label: [" <> grlabel <> "]"
     let gr = grtests ! 0
     case gr of
         (TestLabel _ (TestList li)) -> do
             let filtered = (filter (labelFilter tslabel) (fromList li))
-            when (0 == (length filtered))
-                ((error . unpack) ("Test not found, label: [" <> tslabel <> "]"))
+            when (0 == (length filtered)) $ error . unpack $
+                "Test not found, label: [" <> tslabel <> "]"
             hunitRun filtered
-        _ -> (error . unpack) ("Invalid test group,"
+        _ -> error . unpack $
+               "Invalid test group,"
             <> " label: [" <> grlabel <>"]"
-            <> " paths: [" <> textShow (testCasePaths gr) <> "]")
+            <> " paths: [" <> textShow (testCasePaths gr) <> "]"
 
 -- | Runs all, group or one of specified @HUnit@ tests depending on the command line arguments
 --

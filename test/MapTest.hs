@@ -38,6 +38,6 @@ testGet = TestLabel "testGet" $ TestCase $ do
     return ()
 
 mapTest :: Test
-mapTest = TestLabel "MapTest" (TestList
+mapTest = TestLabel "MapTest" $ TestList
     [ testGet
-    ])
+    ]

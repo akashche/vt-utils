@@ -39,7 +39,7 @@ module VtUtils.JSON
     , jsonGet
     ) where
 
-import Prelude (Either(..), IO, String, (.), error, return)
+import Prelude (Either(..), IO, String, (.), ($), error, return)
 import Data.Aeson (FromJSON, Value(..), ToJSON, eitherDecode)
 import Data.Aeson.Encode.Pretty (encodePrettyToTextBuilder)
 import Data.Aeson.Types ((.:), parseEither)
@@ -90,9 +90,9 @@ jsonEncodeText = toStrict . toLazyText . encodePrettyToTextBuilder
 jsonDecodeText :: forall a . FromJSON a => Text -> a
 jsonDecodeText text =
     case eitherDecode bs :: Either String a of
-        Left err -> (error . unpack)
-            (  "Error decoding JSON,"
-            <> " message: [" <> pack err <> "]")
+        Left err -> error . unpack $
+               "Error decoding JSON,"
+            <> " message: [" <> pack err <> "]"
         Right res -> res
     where
         bs = fromChunks [encodeUtf8 text]
@@ -125,10 +125,10 @@ jsonDecodeFile path =
     where
         fun bs =
             case eitherDecode bs :: Either String a of
-                Left err -> (error . unpack)
-                    (  "Error decoding JSON,"
+                Left err -> error . unpack $
+                       "Error decoding JSON,"
                     <> " path: [" <> path <> "]"
-                    <> " message: [" <> pack err <> "]")
+                    <> " message: [" <> pack err <> "]"
                 Right res -> return res
 
 -- | Extract the field value from the specified JSON object
@@ -159,12 +159,12 @@ jsonGet :: forall a . FromJSON a => Value -> Text -> a
 jsonGet val field =
     case val of
         Object obj -> case parseEither (.: field) obj :: Either String a of
-            Left err -> (error . unpack)
-                 (  "Error accessing field,"
+            Left err -> error . unpack $
+                    "Error accessing field,"
                  <> " name: [" <> field <> "],"
                  <> " object: [" <> (jsonEncodeText obj) <> "]"
-                 <> " message: [" <> (pack err) <> "]")
+                 <> " message: [" <> (pack err) <> "]"
             Right a -> a
-        _ -> (error .unpack)
-                ( "Invalid non-object JSON value specified,"
-                <> " value: [" <> (jsonEncodeText val) <> "]")
+        _ -> error .unpack $
+                  "Invalid non-object JSON value specified,"
+                <> " value: [" <> (jsonEncodeText val) <> "]"

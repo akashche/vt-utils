@@ -55,9 +55,9 @@ testParseISO8601 = TestLabel "testParseISO8601" $ TestCase $ do
     return ()
 
 dateTest :: Test
-dateTest = TestLabel "DateTest" (TestList
+dateTest = TestLabel "DateTest" $ TestList
     [ testFormat
     , testFormatISO8601
     , testParseISO8601
-    ])
+    ]
 

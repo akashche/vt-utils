@@ -43,7 +43,7 @@ testWithFileText = TestLabel "testWithFileText" $ TestCase $ do
     return ()
 
 ioTest :: Test
-ioTest = TestLabel "IOTest" (TestList
+ioTest = TestLabel "IOTest" $ TestList
     [ testWithFileBytes
     , testWithFileText
-    ])
+    ]
