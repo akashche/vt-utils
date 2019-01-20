@@ -34,9 +34,11 @@ module VtUtils.HTTP
     , httpResponseBody
     , httpResponseBodyText
     , httpResponseBodyJSON
+    , httpResponseHeaders
+    , httpResponseHeadersMap
     ) where
 
-import Prelude (Either(..), Int, IO, String, (+), (.), (>), ($), (||), (<$>), fst, fromIntegral, error, return, snd)
+import Prelude (Either(..), Int, IO, String, (.), ($), (>=), (<$>), fromIntegral, error, return)
 import Control.Monad (when)
 import Data.Aeson (FromJSON, eitherDecode)
 import Data.CaseInsensitive (original)
@@ -45,15 +47,17 @@ import Data.Monoid ((<>))
 import Data.Text (Text, pack, unpack)
 import Data.Text.Encoding (decodeUtf8)
 import Data.Vector (Vector)
-import Network.HTTP.Client (BodyReader, Response, brRead, brReadSome, responseBody)
+import Network.HTTP.Client (BodyReader, Response, brReadSome, responseBody, responseHeaders)
 import Network.HTTP.Types (Header)
 import Network.Wai (Request, lazyRequestBody, rawPathInfo, requestHeaders, strictRequestBody)
 import qualified Data.ByteString.Lazy as ByteStringLazy
-import qualified Data.ByteString as ByteString
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Vector as Vector
 
 import VtUtils.Text
+
+uncase :: Header -> (Text, Text)
+uncase (name, val) = ((decodeUtf8 . original) name, (decodeUtf8 val))
 
 -- | @Content-Type@ header for @application/json@ type
 --
@@ -109,14 +113,6 @@ httpRequestBodyJSON req = do
             <> " message: [" <> pack err <> "]"
         Right res -> return res
 
-requestHeadersList :: Request -> [(Text, Text)]
-requestHeadersList req =
-    uncase <$> requestHeaders req
-    where
-        decodeFst = decodeUtf8 . original . fst
-        decodeSnd = decodeUtf8 . snd
-        uncase el = (decodeFst el, decodeSnd el)
-
 -- | Headers of the specified HTTP request as a @Vector@ of @(name, value)@ pairs
 --
 -- Arguments:
@@ -126,7 +122,7 @@ requestHeadersList req =
 -- Return value: Request headers as a @Vector@ of @(name, value)@ pairs
 --
 httpRequestHeaders :: Request -> Vector (Text, Text)
-httpRequestHeaders = Vector.fromList . requestHeadersList
+httpRequestHeaders req = Vector.fromList (uncase <$> requestHeaders req)
 
 -- | Headers of the specified HTTP request as a @name -> value@ map
 --
@@ -137,7 +133,7 @@ httpRequestHeaders = Vector.fromList . requestHeadersList
 -- Return value: Request headers as a @name -> value@ map
 --
 httpRequestHeadersMap :: Request -> HashMap Text Text
-httpRequestHeadersMap = HashMap.fromList . requestHeadersList
+httpRequestHeadersMap req = HashMap.fromList (uncase <$> requestHeaders req)
 
 -- | Read a body of HTTP response as a lazy @ByteString@
 --
@@ -153,9 +149,8 @@ httpResponseBody :: Text -> Response BodyReader -> Int -> IO ByteStringLazy.Byte
 httpResponseBody label resp threshold = do
     let reader = responseBody resp
     lbs <- brReadSome reader threshold
-    rem <- ByteString.length <$> brRead reader
-    let read = (ByteStringLazy.length lbs) + (fromIntegral rem)
-    when (rem > 0 || read > (fromIntegral threshold)) $ error . unpack $
+    let read = (ByteStringLazy.length lbs)
+    when (read >= (fromIntegral threshold)) $ error . unpack $
            "HTTP response size threshold exceeded,"
         <> " threshold: [" <> (textShow threshold) <> "],"
         <> " read: [" <> (textShow read) <> "],"
@@ -208,3 +203,25 @@ httpResponseBodyJSON label resp threshold = do
             <> " message: [" <> pack err <> "],"
             <> " label: [" <> label <> "]"
         Right res -> return res
+
+-- | Headers of the specified HTTP response as a @Vector@ of @(name, value)@ pairs
+--
+-- Arguments:
+--
+--    * @req :: Response@: HTTP request
+--
+-- Return value: Response headers as a @Vector@ of @(name, value)@ pairs
+--
+httpResponseHeaders :: Response a -> Vector (Text, Text)
+httpResponseHeaders resp = Vector.fromList (uncase <$> responseHeaders resp)
+
+-- | Headers of the specified HTTP response as a @name -> value@ map
+--
+-- Arguments:
+--
+--    * @req :: Response@: HTTP request
+--
+-- Return value: Response headers as a @name -> value@ map
+--
+httpResponseHeadersMap :: Response a -> HashMap Text Text
+httpResponseHeadersMap resp = HashMap.fromList (uncase <$> responseHeaders resp)

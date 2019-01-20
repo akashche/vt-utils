@@ -37,12 +37,13 @@ module VtUtils.JSON
     , jsonDecodeText
     , jsonEncodeText
     , jsonGet
+    , jsonUnwrapUnaryOptions
     ) where
 
-import Prelude (Either(..), IO, String, (.), ($), error, return)
-import Data.Aeson (FromJSON, Value(..), ToJSON, eitherDecode)
+import Prelude (Bool(..), Either(..), IO, String, (.), ($), error, return)
+import Data.Aeson (FromJSON, Value(..), ToJSON, defaultOptions, eitherDecode)
 import Data.Aeson.Encode.Pretty (encodePrettyToTextBuilder)
-import Data.Aeson.Types ((.:), parseEither)
+import Data.Aeson.Types (Options(..), (.:), parseEither)
 import Data.ByteString.Lazy (fromChunks)
 import Data.Monoid ((<>))
 import Data.Text (Text, pack, unpack)
@@ -168,3 +169,11 @@ jsonGet val field =
         _ -> error .unpack $
                   "Invalid non-object JSON value specified,"
                 <> " value: [" <> (jsonEncodeText val) <> "]"
+
+-- | JSON options with @unwrapUnaryRecords@ flag flipped to @True@
+--
+jsonUnwrapUnaryOptions :: Options
+jsonUnwrapUnaryOptions =
+    defaultOptions
+        { unwrapUnaryRecords = True
+        }

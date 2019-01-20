@@ -46,12 +46,14 @@ module VtUtils.Prelude
     -- Data.Aeson
     , FromJSON, ToJSON, Value
     , (.=)
-    , object, parseJSON, toJSON
+    , genericParseJSON, genericToJSON, object, parseJSON, toJSON
     -- Data.Aeson.Encode.Pretty
     , encodePretty
+    -- Data.Bits
+    , (.&.), (.|.)
     -- Data.ByteString
     , ByteString
-    , packCString, packCStringLen
+    , packCString, packCStringLen, useAsCString, useAsCStringLen
     -- Data.Foldable
     , foldl', foldr'
     -- Data.HashMap.Strict
@@ -69,6 +71,8 @@ module VtUtils.Prelude
     , pack, unpack
     -- Data.Text.Encoding
     , decodeUtf8, encodeUtf8
+    -- Data.Text.Foreign
+    , peekCStringLen, withCStringLen
     -- Data.Text.IO
     , appendFile, getLine, putStrLn, readFile, writeFile
     -- Data.Text.Lazy
@@ -121,12 +125,13 @@ module VtUtils.Prelude
     -- VtUtils.FS
     , fsCopyDirectory
     -- VtUtils.HTTP
-    , httpContentTypeJSON, httpRequestPath, httpRequestBodyText, httpRequestBodyJSON
-    , httpRequestHeaders, httpRequestHeadersMap, httpResponseBody, httpResponseBodyText
+    , httpContentTypeJSON, httpRequestBodyJSON, httpRequestBodyText, httpRequestPath
+    , httpRequestHeaders, httpRequestHeadersMap, httpResponseBody, httpResponseBodyJSON, httpResponseBodyText
+    , httpResponseHeaders, httpResponseHeadersMap
     -- VtUtils.IO
     , ioWithFileBytes, ioWithFileText
     -- VtUtils.JSON
-    , jsonDecodeFile,jsonDecodeText, jsonEncodeText, jsonGet
+    , jsonDecodeFile,jsonDecodeText, jsonEncodeText, jsonGet, jsonUnwrapUnaryOptions
     -- VtUtils.Map
     , mapGet
     -- VtUtils.Parsec
@@ -155,9 +160,10 @@ import Control.Monad (forM, forM_, mfilter, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.ST (runST)
 import Control.Monad.Trans.Class (lift)
-import Data.Aeson (FromJSON, ToJSON, Value, (.=), object, parseJSON, toJSON)
+import Data.Aeson (FromJSON, ToJSON, Value, (.=), genericParseJSON, genericToJSON, object, parseJSON, toJSON)
 import Data.Aeson.Encode.Pretty (encodePretty)
-import Data.ByteString (ByteString, packCString, packCStringLen)
+import Data.Bits ((.&.), (.|.))
+import Data.ByteString (ByteString, packCString, packCStringLen, useAsCString, useAsCStringLen)
 import Data.Foldable (foldl', foldr')
 import Data.HashMap.Strict (HashMap, lookup)
 import Data.Int (Int64)
@@ -165,6 +171,7 @@ import Data.Maybe (fromJust, isJust)
 import Data.Monoid ((<>), mconcat)
 import Data.Text (Text, pack, unpack)
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
+import Data.Text.Foreign (peekCStringLen, withCStringLen)
 import Data.Text.IO (appendFile, getLine, putStrLn, readFile, writeFile)
 import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy.Builder (Builder, fromText, fromLazyText, fromString, toLazyText)
@@ -188,10 +195,11 @@ import Text.Parsec ((<|>), (<?>))
 import VtUtils.Date (dateFormat, dateFormatISO8601, dateParseISO8601)
 import VtUtils.FFI (ffiWithPtr, ffiWithPtrPtr, ffiWithUTF8, ffiWithUTF16)
 import VtUtils.FS (fsCopyDirectory)
-import VtUtils.HTTP (httpContentTypeJSON, httpRequestPath, httpRequestBodyText, httpRequestBodyJSON
-    , httpRequestHeaders, httpRequestHeadersMap, httpResponseBody, httpResponseBodyText)
+import VtUtils.HTTP (httpContentTypeJSON, httpRequestBodyJSON, httpRequestBodyText, httpRequestPath
+    , httpRequestHeaders, httpRequestHeadersMap, httpResponseBody, httpResponseBodyJSON, httpResponseBodyText
+    , httpResponseHeaders, httpResponseHeadersMap)
 import VtUtils.IO (ioWithFileBytes, ioWithFileText)
-import VtUtils.JSON (jsonDecodeFile,jsonDecodeText, jsonEncodeText, jsonGet)
+import VtUtils.JSON (jsonDecodeFile,jsonDecodeText, jsonEncodeText, jsonGet, jsonUnwrapUnaryOptions)
 import VtUtils.Map (mapGet)
 import VtUtils.Parsec (Parser, parsecLineContains, parsecLinePrefix, parsecLineNoPrefix, parsecSkipLines
     , parsecSkipManyTill, parsecTry, parsecWhitespace, parsecErrorToText, parsecParseFile, parsecParseText )

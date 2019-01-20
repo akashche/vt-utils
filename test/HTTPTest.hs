@@ -123,6 +123,10 @@ testClient = TestLabel "testClient" $ TestCase $ do
         case err of
             Right _ -> assertFailure "Response length check failed"
             Left (_ :: SomeException) -> return ()
+        -- headers
+        headers <- withResponse req man $ \resp ->
+                return (httpResponseHeadersMap resp)
+        assertEqual "header" "application/json" $ mapGet headers "Content-Type"
     return ()
 
 httpTest :: Test

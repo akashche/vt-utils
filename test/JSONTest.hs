@@ -23,7 +23,7 @@ module JSONTest ( jsonTest ) where
 
 import Test.HUnit
 import Prelude (Int, IO, ($), return)
-import Data.Aeson (FromJSON, ToJSON, (.=), object)
+import Data.Aeson (FromJSON, ToJSON, (.=), genericParseJSON, genericToJSON, object, parseJSON, toJSON)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 
@@ -35,6 +35,42 @@ data Foo = Foo
     } deriving Generic
 instance FromJSON Foo
 instance ToJSON Foo
+
+-- jsonUnwrapUnaryOptions
+
+data UnaryData = UnaryData
+    { value :: Int
+    } deriving (Generic)
+instance ToJSON UnaryData
+    where toJSON = genericToJSON jsonUnwrapUnaryOptions
+instance FromJSON UnaryData
+    where parseJSON = genericParseJSON jsonUnwrapUnaryOptions
+
+newtype UnaryNewType = UnaryNewType
+    { value :: Int
+    } deriving (Generic)
+instance ToJSON UnaryNewType
+    where toJSON = genericToJSON jsonUnwrapUnaryOptions
+instance FromJSON UnaryNewType
+    where parseJSON = genericParseJSON jsonUnwrapUnaryOptions
+
+data UnaryHolder = UnaryHolder
+    { udf :: UnaryData
+    , unf :: UnaryNewType
+    } deriving (Generic)
+instance ToJSON UnaryHolder
+instance FromJSON UnaryHolder
+
+_suppress :: IO ()
+_suppress = do
+    let ud = UnaryData 42
+    let _ = value (ud :: UnaryData)
+    let un = UnaryNewType 42
+    let _ = value (un :: UnaryNewType)
+    let uh = UnaryHolder ud un
+    let _ = udf uh
+    let _ = unf uh
+    return ()
 
 objText :: Text
 objText = "{\"foo\":42,\"bar\":\"baz\"}"
@@ -73,11 +109,19 @@ testJsonGet = TestLabel "testJsonGet" $ TestCase $ do
     assertEqual "get_bar" "baz" (jsonGet obj "bar" :: Text)
     return ()
 
+testJsonUnwrapUnary :: Test
+testJsonUnwrapUnary = TestLabel "testJsonUnwrapUnary" $ TestCase $ do
+    let uh = UnaryHolder (UnaryData 42) (UnaryNewType 43)
+    let encoded = jsonEncodeText uh
+    assertEqual "unary" "{\n    \"udf\": 42,\n    \"unf\": 43\n}" encoded
+    return ()
+
 jsonTest :: Test
 jsonTest = TestLabel "JsonTest" $ TestList
     [ testDecodeFile
     , testDecodeText
     , testEncodeText
     , testJsonGet
+    , testJsonUnwrapUnary
     ]
 
