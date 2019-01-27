@@ -22,9 +22,11 @@
 module TextTest ( textTest ) where
 
 import Test.HUnit
-import Prelude (String, ($))
+import Prelude (String, ($), return)
 import Data.ByteString (ByteString)
-import Data.Text (Text)
+import Data.Monoid ((<>))
+import Data.Text (Text, drop)
+import Data.Vector (foldl', fromList)
 
 import VtUtils.Text
 
@@ -34,7 +36,30 @@ testShow = TestLabel "testShow" $ TestCase $ do
     assertEqual "string" "foo" (textShow ("foo" :: String))
     assertEqual "bytestring" "foo" (textShow ("foo" :: ByteString))
 
+testSplit :: Test
+testSplit = TestLabel "testSplit" $ TestCase $ do
+    assertEqual "1" "foo_bar_baz_boo" $ conc $ textSplit "foo{}bar{}baz{}boo" "{}"
+    assertEqual "2" "" $ conc $ textSplit "" "{}"
+    assertEqual "3" "foo" $ conc $ textSplit "foo" "{}"
+    assertEqual "4" "_foo" $ conc $ textSplit "{}foo" "{}"
+    assertEqual "5" "foo_" $ conc $ textSplit "foo{}" "{}"
+    assertEqual "6" "_foo_bar__baz__boo_" $ conc $ textSplit "{}foo{}bar{}{}baz{}{}boo{}" "{}"
+    return ()
+    where
+        conc vec = drop 1 $ foldl' fun "" vec
+        fun ac el = ac <> "_" <> el
+
+testFormat :: Test
+testFormat = TestLabel "testFormat" $ TestCase $ do
+    assertEqual "1" "foo 41 bar 42" $ textFormat "foo {} bar {}" (fromList ["41", "42"])
+    assertEqual "2" "43 foo 41 bar 42" $ textFormat "{} foo {} bar {}" (fromList ["43", "41", "42"])
+    assertEqual "3" "foo 42 bar" $ textFormat "foo {} bar" (fromList ["42"])
+    assertEqual "2" "43 foo 4142 bar 44" $ textFormat "{} foo {}{} bar {}" (fromList ["43", "41", "42", "44"])
+    return ()
+
 textTest :: Test
 textTest = TestLabel "TextTest" $ TestList
     [ testShow
+    , testSplit
+    , testFormat
     ]

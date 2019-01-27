@@ -117,7 +117,7 @@ testJsonUnwrapUnary = TestLabel "testJsonUnwrapUnary" $ TestCase $ do
     return ()
 
 jsonTest :: Test
-jsonTest = TestLabel "JsonTest" $ TestList
+jsonTest = TestLabel "JSONTest" $ TestList
     [ testDecodeFile
     , testDecodeText
     , testEncodeText
