@@ -143,7 +143,7 @@ module VtUtils.Prelude
     -- VtUtils.Process
     , processSpawnAndWait
     -- VtUtils.Text
-    , textShow
+    , textShow, textFormat, textFormatParts, textSplit
     ) where
 
 import Prelude
@@ -205,4 +205,4 @@ import VtUtils.Parsec (Parser, parsecLineContains, parsecLinePrefix, parsecLineN
     , parsecSkipManyTill, parsecTry, parsecWhitespace, parsecErrorToText, parsecParseFile, parsecParseText )
 import VtUtils.Path (pathIsAbsolute, pathConcat, pathPrepend)
 import VtUtils.Process (processSpawnAndWait)
-import VtUtils.Text (textShow)
+import VtUtils.Text (textShow, textFormat, textFormatParts, textSplit)
