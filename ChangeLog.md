@@ -1,5 +1,9 @@
 # Changelog for vt-utils
 
+## 1.2.0.0
+
+HTTP and text format utilities added
+
 ## 1.1.0.0
 
 FFI, HTTP and process-spawning utilities added
