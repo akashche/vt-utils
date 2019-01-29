@@ -30,11 +30,9 @@ module VtUtils.Prelude
     , (>>=), (&&), (||), (<$>), (<*>)
     , abs, ceiling, div, error, flip, floor, fmap, fromIntegral, fst, id, length, mapM, mapM_, mod
     , not, otherwise, pure, read, return, seq, sequence, sequence_, show, snd, take, undefined
-    -- Control.Concurrent
-    , forkIO, forkOS
     -- Control.Exception
     , SomeException
-    , bracket, bracket_, throw, try
+    , bracket, bracket_, catch, throw, try
     -- Control.Monad
     , forM, forM_, mfilter, unless, when
     -- Control.Monad.IO.Class
@@ -154,8 +152,7 @@ import Prelude
     , abs, ceiling, div, error, flip, floor, fmap, fromIntegral, fst, id, length, mapM, mapM_, mod
     , not, otherwise, pure, read, return, seq, sequence, sequence_, snd, show, take, undefined
     )
-import Control.Concurrent (forkIO, forkOS)
-import Control.Exception (SomeException, bracket, bracket_, throw, try)
+import Control.Exception (SomeException, bracket, bracket_, catch, throw, try)
 import Control.Monad (forM, forM_, mfilter, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.ST (runST)
