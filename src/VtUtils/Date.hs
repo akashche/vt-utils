@@ -19,6 +19,7 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
@@ -26,14 +27,17 @@
 module VtUtils.Date
     ( dateFormat
     , dateFormatISO8601
+    , DateParseISO8601Error(..)
     , dateParseISO8601
     ) where
 
-import Prelude (Bool(False), Maybe(..), (.), ($), error)
+import Prelude (Bool(False), Either(..), Maybe(..), Show(..), ($))
 import Data.Monoid ((<>))
 import Data.Text (Text, pack, unpack)
 import Data.Time.Clock (UTCTime)
 import Data.Time.Format (defaultTimeLocale, formatTime, parseTimeM)
+
+import VtUtils.Error
 
 iso8601 :: Text
 iso8601 = "%Y-%m-%d %H:%M:%S"
@@ -49,7 +53,7 @@ iso8601 = "%Y-%m-%d %H:%M:%S"
 --
 dateFormat :: Text -> UTCTime -> Text
 dateFormat format date =
-    pack (formatTime defaultTimeLocale (unpack format) date)
+    pack $ formatTime defaultTimeLocale (unpack format) date
 
 -- | Formats a date into a Text string using ISO8601 formatting string
 --
@@ -59,17 +63,24 @@ dateFormat format date =
 --
 -- Arguments:
 --
---    * @date :: UTCtime@: Date to format
+--    * @date :: UTCTime@: Date to format
 --
 -- Return value: String containing a date in ISO8601 format
 --
 dateFormatISO8601 :: UTCTime -> Text
 dateFormatISO8601 date = dateFormat iso8601 date
 
--- | Parses Text string using ISO8601 format
+-- | Error record for `dateParseISO8601` function
 --
--- Raises an [error](http://hackage.haskell.org/package/base-4.12.0.0/docs/Prelude.html#v:error), if
--- input string cannot be parsed as ISO8601 date
+data DateParseISO8601Error = DateParseISO8601Error
+    { invalidDate :: Text -- ^ Invalid date string specified for parsing
+    }
+instance Show DateParseISO8601Error where
+    show e@(DateParseISO8601Error {invalidDate}) = errorShow e $
+               "Error parsing with ISO8601 format,"
+            <> " date: [" <> invalidDate <> "]"
+
+-- | Parses Text string using ISO8601 format
 --
 -- Expected input example: @2018-11-25 00:00:01@
 --
@@ -77,11 +88,10 @@ dateFormatISO8601 date = dateFormat iso8601 date
 --
 --    * @text :: Text@: Text string containing a date in ISO8601 format
 --
--- Return value: Parsed date
+-- Return value: Parsed date or error message
 --
-dateParseISO8601 :: Text -> UTCTime
+dateParseISO8601 :: Text -> Either DateParseISO8601Error UTCTime
 dateParseISO8601 text =
     case parseTimeM False defaultTimeLocale (unpack iso8601) (unpack text) :: Maybe UTCTime of
-        Just tm -> tm
-        Nothing -> error . unpack $
-            "Error parsing ISO8601 format, date: [" <> text <> "]"
+        Just tm -> Right tm
+        Nothing -> Left $ DateParseISO8601Error text

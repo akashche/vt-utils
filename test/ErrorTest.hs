@@ -1,5 +1,5 @@
 --
--- Copyright 2018, akashche at redhat.com
+-- Copyright 2019, akashche at redhat.com
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
 -- you may not use this file except in compliance with the License.
@@ -15,45 +15,28 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
 
-import Prelude (IO, ($))
-import Data.Vector (fromList)
-import VtUtils.HUnit (hunitMain)
+module ErrorTest ( errorTest ) where
 
-import HUnitTest
-import DateTest
-import ErrorTest
-import FFITest
-import FSTest
-import HTTPTest
-import IOTest
-import JSONTest
-import MapTest
-import ParsecTest
-import PathTest
-import PreludeTest
-import ProcessTest
-import QueriesTest
-import TextTest
+import Test.HUnit
+import Prelude (($), return)
 
-main :: IO ()
-main = hunitMain $ fromList
-    [ hunitTest
-    , dateTest
-    , errorTest
-    , ffiTest
-    , fsTest
-    , httpTest
-    , ioTest
-    , jsonTest
-    , mapTest
-    , parsecTest
-    , pathTest
-    , preludeTest
-    , processTest
-    , queriesTest
-    , textTest
+import VtUtils.Error
+
+data TestError1 = TestError1
+
+testShow :: Test
+testShow = TestLabel "testShow" $ TestCase $ do
+    let dt = TestError1
+    assertEqual "show" "TestError1: foo" $ errorShow dt "foo"
+    return ()
+
+errorTest :: Test
+errorTest = TestLabel "ErrorTest" $ TestList
+    [ testShow
     ]
+

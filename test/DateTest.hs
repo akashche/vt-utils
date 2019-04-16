@@ -15,6 +15,7 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
@@ -22,7 +23,7 @@
 module DateTest ( dateTest ) where
 
 import Test.HUnit
-import Prelude (($), return)
+import Prelude (($), Either(..), return)
 import Data.Text (Text)
 import Data.Time.Clock (UTCTime(..))
 import Data.Time.Calendar (fromGregorian)
@@ -37,21 +38,23 @@ dts = "2018-11-25 00:00:01"
 
 testFormat :: Test
 testFormat = TestLabel "testFormat" $ TestCase $ do
-    assertEqual "year" "2018" (dateFormat "%Y" dt)
-    assertEqual "month" "11" (dateFormat "%m" dt)
-    assertEqual "day" "25" (dateFormat "%d" dt)
-    assertEqual "second" "01" (dateFormat "%S" dt)
+    assertEqual "year" "2018" $ dateFormat "%Y" dt
+    assertEqual "month" "11" $ dateFormat "%m" dt
+    assertEqual "day" "25" $ dateFormat "%d" dt
+    assertEqual "second" "01" $ dateFormat "%S" dt
     return ()
 
 testFormatISO8601 :: Test
 testFormatISO8601 = TestLabel "testFormatISO8601" $ TestCase $ do
-    assertEqual "iso" dts (dateFormatISO8601 dt)
+    assertEqual "iso" dts $ dateFormatISO8601 dt
     return ()
 
 testParseISO8601 :: Test
 testParseISO8601 = TestLabel "testParseISO8601" $ TestCase $ do
-    let parsed = dateParseISO8601 dts
-    assertEqual "parsed" dt parsed
+    let Right parsed = dateParseISO8601 dts
+    assertEqual "parsed" dt $ parsed
+    let Left (DateParseISO8601Error {invalidDate}) = dateParseISO8601 "foobar"
+    assertEqual "invalid" "foobar" $ invalidDate
     return ()
 
 dateTest :: Test

@@ -1,5 +1,5 @@
 --
--- Copyright 2018, akashche at redhat.com
+-- Copyright 2019, akashche at redhat.com
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
 -- you may not use this file except in compliance with the License.
@@ -12,48 +12,36 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
+--
+-- |
+-- Error reporting utilities
+--
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
 
-import Prelude (IO, ($))
-import Data.Vector (fromList)
-import VtUtils.HUnit (hunitMain)
+module VtUtils.Error
+    ( errorShow
+    ) where
 
-import HUnitTest
-import DateTest
-import ErrorTest
-import FFITest
-import FSTest
-import HTTPTest
-import IOTest
-import JSONTest
-import MapTest
-import ParsecTest
-import PathTest
-import PreludeTest
-import ProcessTest
-import QueriesTest
-import TextTest
+import Prelude (String, (.), ($), show)
+import Data.Monoid ((<>))
+import Data.Text (Text, pack, unpack)
+import Data.Typeable (Typeable, typeOf)
 
-main :: IO ()
-main = hunitMain $ fromList
-    [ hunitTest
-    , dateTest
-    , errorTest
-    , ffiTest
-    , fsTest
-    , httpTest
-    , ioTest
-    , jsonTest
-    , mapTest
-    , parsecTest
-    , pathTest
-    , preludeTest
-    , processTest
-    , queriesTest
-    , textTest
-    ]
+-- | Formats error message to be used with @Show@
+--
+-- Arguments:
+--
+--    * @exc :: Typeable@: Error record or exception
+--    * @msg :: Text@: Error message
+--
+-- Return value: String containing the type name of error and a message
+--
+errorShow :: (Typeable e) => e -> Text -> String
+errorShow exc msg = unpack $
+    ((pack . show . typeOf) exc) <> ": " <> msg

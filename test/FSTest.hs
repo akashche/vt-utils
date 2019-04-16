@@ -15,6 +15,7 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
@@ -30,6 +31,7 @@ import Data.Vector (fromList, length)
 import System.Directory (createDirectory, listDirectory, removeDirectoryRecursive)
 
 import VtUtils.FS
+import VtUtils.HUnit
 
 testCopyDirectory :: Test
 testCopyDirectory = TestLabel "testCopyDirectory" $ TestCase $ do
@@ -37,15 +39,23 @@ testCopyDirectory = TestLabel "testCopyDirectory" $ TestCase $ do
         (createDirectory "test/scratch")
         (removeDirectoryRecursive "test/scratch")
         $ do
+            -- success
             _ <- fsCopyDirectory "test/data" "test/scratch/data"
             li <- (fmap pack) <$> fromList <$> listDirectory "test/scratch/data"
             assertEqual "count" 3 (length li)
             contents <- readFile "test/scratch/data/test.txt"
             assertEqual "contents" "foo" contents
+            -- src failure
+            esrc <- hunitCatchException "source" $ fsCopyDirectory "SRCFAIL" "test/scratch/data1"
+            let FSCopyDirectorySourceException {source} = esrc
+            assertEqual "src fail" "SRCFAIL" $ source
+            -- dest failure
+            edest <- hunitCatchException "dest" $ fsCopyDirectory "test/data" "test/scratch/data"
+            let FSCopyDirectoryDestException {dest} = edest
+            assertEqual "dest fail" "test/scratch/data" $ dest
             return ()
 
 fsTest :: Test
 fsTest = TestLabel "FSTest" $ TestList
     [ testCopyDirectory
     ]
-

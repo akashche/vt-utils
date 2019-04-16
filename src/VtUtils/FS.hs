@@ -19,20 +19,47 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
 
 module VtUtils.FS
-    ( fsCopyDirectory
+    ( FSCopyDirectoryDestException(..)
+    , FSCopyDirectorySourceException(..)
+    , fsCopyDirectory
     ) where
-import Prelude (IO, (.), ($), (<$>), error, fmap)
+import Prelude (IO, Show(..), ($), (<$>), fmap)
+import Control.Exception (Exception(..), throwIO)
 import Control.Monad (forM_, unless, when)
 import Data.Monoid ((<>))
 import Data.Text (Text, pack, unpack)
 import System.Directory (copyFile, createDirectory, doesDirectoryExist, listDirectory)
 
 import VtUtils.Path
+import VtUtils.Error
+
+-- | Exception for `fsCopyDirectory` function
+--
+data FSCopyDirectorySourceException = FSCopyDirectorySourceException
+    { source :: Text -- ^ Invalid source directory
+    }
+instance Exception FSCopyDirectorySourceException
+instance Show FSCopyDirectorySourceException where
+    show e@(FSCopyDirectorySourceException {source}) = errorShow e $
+               "Source directory does not exist,"
+            <> " path: [" <> source <> "]"
+
+-- | Exception for `fsCopyDirectory` function
+--
+data FSCopyDirectoryDestException = FSCopyDirectoryDestException
+    { dest :: Text -- ^ Invalid destination directory
+    }
+instance Exception FSCopyDirectoryDestException
+instance Show FSCopyDirectoryDestException where
+    show e@(FSCopyDirectoryDestException {dest}) = errorShow e $
+               "Destination directory does not exist,"
+            <> " path: [" <> dest <> "]"
 
 -- | Copies a directory recursively
 --
@@ -47,11 +74,9 @@ import VtUtils.Path
 fsCopyDirectory :: Text -> Text -> IO ()
 fsCopyDirectory src dest = do
     srcex <- doesDirectoryExist (unpack src)
-    unless (srcex) $ error . unpack $
-        "Source directory does not exist, src: [" <> src <> "]"
+    unless (srcex) $ throwIO $ FSCopyDirectorySourceException src
     destex <- doesDirectoryExist (unpack dest)
-    when (destex) $ error . unpack $
-        "Dest directory already exists, dest: [" <> dest <> "]"
+    when (destex) $ throwIO $ FSCopyDirectoryDestException dest
     createDirectory (unpack dest)
     children <- (fmap pack) <$> listDirectory (unpack src)
     forM_ children $ \child -> do

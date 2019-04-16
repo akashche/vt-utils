@@ -24,13 +24,15 @@
 {-# LANGUAGE Strict #-}
 
 module VtUtils.HUnit
-    ( hunitMain
+    ( hunitCatchException
+    , hunitMain
     , hunitRun
     , hunitRunGroup
     , hunitRunSingle
     ) where
 
-import Prelude (Bool, IO, (==), (/=), (.), ($), (<$>), error, fmap, return)
+import Prelude (Bool, Either(..), IO, Show(..), (==), (/=), (.), ($), (<$>), error, fmap, return)
+import Control.Exception (Exception, throwIO, try)
 import Control.Monad (when)
 import Data.Monoid ((<>))
 import Data.Text (Text, pack, unpack)
@@ -145,3 +147,14 @@ hunitMain tests = do
         2 -> hunitRunSingle tests (args ! 0) (args ! 1)
         _ -> error "Invalid test arguments, expected: [stack test [--ta \"group_name [test_name]\"]"
     return ()
+
+data ExpectedExceptionNotThrown = ExpectedExceptionNotThrown Text
+    deriving Show
+instance Exception ExpectedExceptionNotThrown
+
+hunitCatchException :: Exception e => Text -> IO a -> IO e
+hunitCatchException msg action = do
+    outcome <- try $ action
+    case outcome of
+        Right _ -> throwIO $ ExpectedExceptionNotThrown msg
+        Left exc -> return exc

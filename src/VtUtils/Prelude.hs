@@ -32,7 +32,7 @@ module VtUtils.Prelude
     , not, otherwise, pure, read, return, seq, sequence, sequence_, show, snd, take, undefined
     -- Control.Exception
     , SomeException
-    , bracket, bracket_, catch, throw, try
+    , bracket, bracket_, catch, throw, throwIO, try
     -- Control.Monad
     , forM, forM_, mfilter, unless, when
     -- Control.Monad.IO.Class
@@ -118,6 +118,8 @@ module VtUtils.Prelude
 
     -- VtUtils.Date
     , dateFormat, dateFormatISO8601, dateParseISO8601
+    -- VtUtils.Error
+    , errorShow
     -- VtUtils.FFI
     , ffiWithPtr, ffiWithPtrPtr, ffiWithUTF8, ffiWithUTF16
     -- VtUtils.FS
@@ -152,7 +154,7 @@ import Prelude
     , abs, ceiling, div, error, flip, floor, fmap, fromIntegral, fst, id, length, mapM, mapM_, mod
     , not, otherwise, pure, read, return, seq, sequence, sequence_, snd, show, take, undefined
     )
-import Control.Exception (SomeException, bracket, bracket_, catch, throw, try)
+import Control.Exception (SomeException, bracket, bracket_, catch, throw, throwIO, try)
 import Control.Monad (forM, forM_, mfilter, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.ST (runST)
@@ -190,6 +192,7 @@ import Network.Wai (Application, Request, RequestBodyLength(..)
 import Text.Parsec ((<|>), (<?>))
 
 import VtUtils.Date (dateFormat, dateFormatISO8601, dateParseISO8601)
+import VtUtils.Error (errorShow)
 import VtUtils.FFI (ffiWithPtr, ffiWithPtrPtr, ffiWithUTF8, ffiWithUTF16)
 import VtUtils.FS (fsCopyDirectory)
 import VtUtils.HTTP (httpContentTypeJSON, httpRequestBodyJSON, httpRequestBodyText, httpRequestPath
