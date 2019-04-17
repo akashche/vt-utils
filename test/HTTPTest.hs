@@ -15,6 +15,7 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
@@ -22,7 +23,7 @@
 module HTTPTest ( httpTest ) where
 
 import Test.HUnit
-import Prelude (Either(..), Int, IO, (.), ($), (==), (<$>), return)
+import Prelude (Either(..), Int, IO, (.), ($), (==), (/=), (<$>), return)
 import Control.Exception (SomeException, try)
 import Data.Aeson (Value, (.=), object)
 import Data.Aeson.Encode.Pretty (encodePretty)
@@ -41,6 +42,7 @@ import qualified Data.Text as Text
 import qualified Network.HTTP.Client as Client
 
 import VtUtils.HTTP
+import VtUtils.HUnit
 import VtUtils.JSON
 import VtUtils.Map
 import VtUtils.Text
@@ -48,18 +50,23 @@ import VtUtils.Text
 reqHandler :: Application
 reqHandler req respond = do
     (bt, bj) <- if "/json" == httpRequestPath req then do
-        bj <- httpRequestBodyJSON req :: IO Value
-        return ("", bj)
+        outcome <- try $ (httpRequestBodyJSON req :: IO Value)
+        case outcome of
+            Left (e :: SomeException) -> return (textShow e, object [])
+            Right bj -> return ("", bj)
     else do
         bt <- httpRequestBodyText req
         return (bt, object [])
-    respond $ responseLBS status200 [httpContentTypeJSON] $
-        encodePretty $ object
-            [ "path" .= httpRequestPath req
-            , "headers" .= httpRequestHeadersMap req
-            , "bodyText" .= bt
-            , "bodyJson" .= bj
-            ]
+    if "/jsonfail" /= httpRequestPath req then
+        respond $ responseLBS status200 [httpContentTypeJSON] $
+            encodePretty $ object
+                [ "path" .= httpRequestPath req
+                , "headers" .= httpRequestHeadersMap req
+                , "bodyText" .= bt
+                , "bodyJson" .= bj
+                ]
+    else
+        respond $ responseLBS status200 [] $ "json fail"
 
 createManager :: IO Manager
 createManager = newManager Client.defaultManagerSettings
@@ -98,6 +105,13 @@ testServer = TestLabel "testServer" $ TestCase $ do
         resp3 <- (jsonDecodeText . decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req3 man :: IO Value
         assertEqual "post text length" 0 $ Text.length (jsonGet resp3 "bodyText" :: Text)
         assertEqual "post json" 42 $ (jsonGet (jsonGet resp3 "bodyJson") "foo" :: Int)
+        -- POST invalid JSON
+        let req4 = ((parseRequest_ . unpack) (url <> "json"))
+                { Client.method = "POST"
+                , Client.requestBody = Client.RequestBodyLBS "json fail"
+                }
+        resp4 <- (jsonDecodeText . decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req4 man :: IO Value
+        assertBool "json err msg" $ Text.isPrefixOf "HTTPRequestBodyJSONException" (jsonGet resp4 "bodyText")
     return ()
 
 testClient :: Test
@@ -122,11 +136,21 @@ testClient = TestLabel "testClient" $ TestCase $ do
                 httpResponseBodyJSON url resp 7 :: IO Value
         case err of
             Right _ -> assertFailure "Response length check failed"
-            Left (_ :: SomeException) -> return ()
+            Left (e :: SomeException) ->
+                assertBool "read err" $ Text.isPrefixOf "HTTPResponseBodyException" (textShow e)
         -- headers
         headers <- withResponse req man $ \resp ->
                 return (httpResponseHeadersMap resp)
         assertEqual "header" "application/json" $ mapGet headers "Content-Type"
+        -- invalid json
+        let reqjf = ((parseRequest_ . unpack) (url <> "jsonfail"))
+                { Client.method = "POST"
+                , Client.requestBody = Client.RequestBodyLBS "req json fail"
+                }
+        ejf <- withResponse reqjf man $ \resp ->
+            hunitCatchException "json fail" $ (httpResponseBodyJSON url resp 1024 :: IO Value)
+        let HTTPResponseBodyJSONException {label} = ejf
+        assertEqual "json resp err" url $ label
     return ()
 
 httpTest :: Test

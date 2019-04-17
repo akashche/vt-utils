@@ -28,16 +28,17 @@ module VtUtils.Text
     , textSplit
     , textFormatParts
     , textFormat
+    , textDecodeUtf8Limited
     ) where
 
-import Prelude (Maybe, Show, String, (+), (-), (.), ($), (==), (/=), fst, error, otherwise, show)
+import Prelude (Either(..), Int, Maybe, Show, String, (+), (-), (.), ($), (==), (/=), (<=), fst, error, otherwise, show)
 import Data.ByteString (ByteString)
 import Data.Maybe (isJust, fromJust)
 import Data.Monoid ((<>))
 import Data.List (reverse)
-import qualified Data.Text as Text
 import Data.Text (Text, breakOnAll, drop, pack, unpack)
-import Data.Text.Encoding (decodeUtf8)
+import qualified Data.Text as Text
+import Data.Text.Encoding (decodeUtf8, decodeUtf8')
 import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy.Builder (fromText, toLazyText)
 import Data.Typeable (Typeable, cast)
@@ -140,3 +141,13 @@ textFormatParts parts params =
 textFormat :: Text -> Vector Text -> Text
 textFormat template params =
     textFormatParts (textSplit template "{}") params
+
+textDecodeUtf8Limited :: ByteString -> Int -> Text
+textDecodeUtf8Limited bs limit =
+    case decodeUtf8' bs of
+        Left _ -> "INVALID_UTF8"
+        Right tx ->
+            if Text.length tx <= limit then
+                tx
+            else
+                (Text.take limit tx) <> " ..."

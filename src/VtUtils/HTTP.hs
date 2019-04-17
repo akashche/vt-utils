@@ -19,6 +19,7 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
@@ -27,24 +28,29 @@ module VtUtils.HTTP
     ( httpContentTypeJSON
     , httpRequestPath
     , httpRequestBodyText
+    , HTTPRequestBodyJSONException(..)
     , httpRequestBodyJSON
     , httpRequestHeaders
     , httpRequestHeadersMap
     -- client
+    , HTTPResponseBodyException(..)
     , httpResponseBody
     , httpResponseBodyText
+    , HTTPResponseBodyJSONException(..)
     , httpResponseBodyJSON
     , httpResponseHeaders
     , httpResponseHeadersMap
     ) where
 
-import Prelude (Either(..), Int, IO, String, (.), ($), (>=), (<$>), fromIntegral, error, return)
+import Prelude (Either(..), Int, IO, Show(..), String, (.), ($), (>=), (<$>), fromIntegral, return)
+import Control.Exception (Exception(..), throwIO)
 import Control.Monad (when)
 import Data.Aeson (FromJSON, eitherDecode)
+import Data.ByteString (ByteString)
 import Data.CaseInsensitive (original)
 import Data.HashMap.Strict (HashMap)
 import Data.Monoid ((<>))
-import Data.Text (Text, pack, unpack)
+import Data.Text (Text, pack)
 import Data.Text.Encoding (decodeUtf8)
 import Data.Vector (Vector)
 import Network.HTTP.Client (BodyReader, Response, brReadSome, responseBody, responseHeaders)
@@ -54,6 +60,7 @@ import qualified Data.ByteString.Lazy as ByteStringLazy
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Vector as Vector
 
+import VtUtils.Error
 import VtUtils.Text
 
 uncase :: Header -> (Text, Text)
@@ -86,6 +93,19 @@ httpRequestPath = decodeUtf8 . rawPathInfo
 httpRequestBodyText :: Request -> IO Text
 httpRequestBodyText req = (decodeUtf8 . ByteStringLazy.toStrict) <$> strictRequestBody req
 
+-- | Exception for `httpRequestBodyJSON` function
+--
+data HTTPRequestBodyJSONException = HTTPRequestBodyJSONException
+    { requestBody :: ByteString -- ^ Request body containing invalid JSON
+    , message :: Text -- ^ JSON parsing error message
+    }
+instance Exception HTTPRequestBodyJSONException
+instance Show HTTPRequestBodyJSONException where
+    show e@(HTTPRequestBodyJSONException {requestBody, message}) = errorShow e $
+               "JSON decoding error,"
+            <> " message: [" <> message <> "],"
+            <> " request body: [" <> (textDecodeUtf8Limited requestBody 1024) <> "]"
+
 -- | Reads a body of the specified HTTP request and parses it as a JSON value
 --
 -- Data type should be specified with a type annotation:
@@ -108,9 +128,10 @@ httpRequestBodyJSON :: forall a . FromJSON a => Request -> IO a
 httpRequestBodyJSON req = do
     bs <- lazyRequestBody req
     case eitherDecode bs :: Either String a of
-        Left err -> error . unpack $
-               "JSON decoding error,"
-            <> " message: [" <> pack err <> "]"
+        Left err -> throwIO $ HTTPRequestBodyJSONException
+                { requestBody = ByteStringLazy.toStrict bs
+                , message = pack err
+                }
         Right res -> return res
 
 -- | Headers of the specified HTTP request as a @Vector@ of @(name, value)@ pairs
@@ -135,6 +156,23 @@ httpRequestHeaders req = Vector.fromList (uncase <$> requestHeaders req)
 httpRequestHeadersMap :: Request -> HashMap Text Text
 httpRequestHeadersMap req = HashMap.fromList (uncase <$> requestHeaders req)
 
+-- | Exception for `httpRequestBodyJSON` function
+--
+data HTTPResponseBodyException = HTTPResponseBodyException
+    { threshold :: Int -- ^ Max allowed bytes to read
+    , read :: Int -- ^ Bytes actually read
+    , label :: Text -- ^ Caller-supplied label
+    , responsePart :: ByteString -- ^ Part of the response that was read
+    }
+instance Exception HTTPResponseBodyException
+instance Show HTTPResponseBodyException where
+    show e@(HTTPResponseBodyException {threshold, read, label, responsePart}) = errorShow e $
+               "HTTP response size threshold exceeded,"
+            <> " threshold: [" <> (textShow threshold) <> "],"
+            <> " read: [" <> (textShow read) <> "],"
+            <> " label: [" <> label <> "],"
+            <> " response part: [" <> (textDecodeUtf8Limited responsePart 1024) <> "]"
+
 -- | Read a body of HTTP response as a lazy @ByteString@
 --
 -- Arguments:
@@ -150,11 +188,12 @@ httpResponseBody label resp threshold = do
     let reader = responseBody resp
     lbs <- brReadSome reader threshold
     let read = (ByteStringLazy.length lbs)
-    when (read >= (fromIntegral threshold)) $ error . unpack $
-           "HTTP response size threshold exceeded,"
-        <> " threshold: [" <> (textShow threshold) <> "],"
-        <> " read: [" <> (textShow read) <> "],"
-        <> " label: [" <> label <> "]"
+    when (read >= (fromIntegral threshold)) $ throwIO $ HTTPResponseBodyException
+            { threshold = threshold
+            , read = fromIntegral read
+            , label = label
+            , responsePart = ByteStringLazy.toStrict lbs
+            }
     return lbs
 
 -- | Read a body of HTTP response as a @Text@ string
@@ -172,6 +211,21 @@ httpResponseBodyText label resp threshold = do
     lbs <- httpResponseBody label resp threshold
     let tx = decodeUtf8 (ByteStringLazy.toStrict lbs)
     return tx
+
+-- | Exception for `httpResponseBodyJSON` function
+--
+data HTTPResponseBodyJSONException = HTTPResponseBodyJSONException
+    { response :: ByteString -- ^ Response body containing invalid JSON
+    , label :: Text -- ^ Caller-supplied label
+    , message :: Text -- ^ JSON parsing error message
+    }
+instance Exception HTTPResponseBodyJSONException
+instance Show HTTPResponseBodyJSONException where
+    show e@(HTTPResponseBodyJSONException {response, label, message}) = errorShow e $
+               "JSON decoding error,"
+            <> " message: [" <> message <> "],"
+            <> " label: [" <> label <> "],"
+            <> " response: [" <> (textDecodeUtf8Limited response 1024) <> "]"
 
 -- | Read a body of HTTP response as a JSON value
 --
@@ -197,11 +251,11 @@ httpResponseBodyJSON :: forall a . FromJSON a => Text -> Response BodyReader -> 
 httpResponseBodyJSON label resp threshold = do
     bs <- httpResponseBody label resp threshold
     case eitherDecode bs :: Either String a of
-        Left err -> error . unpack $
-               "JSON decoding error,"
-            <> " json: [" <> ((decodeUtf8 . ByteStringLazy.toStrict) (ByteStringLazy.take 1024 bs)) <> "],"
-            <> " message: [" <> pack err <> "],"
-            <> " label: [" <> label <> "]"
+        Left err -> throwIO $ HTTPResponseBodyJSONException
+                { message = pack err
+                , label = label
+                , response = ByteStringLazy.toStrict bs
+                }
         Right res -> return res
 
 -- | Headers of the specified HTTP response as a @Vector@ of @(name, value)@ pairs
