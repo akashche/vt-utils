@@ -51,7 +51,6 @@ import Data.CaseInsensitive (original)
 import Data.HashMap.Strict (HashMap)
 import Data.Monoid ((<>))
 import Data.Text (Text, pack)
-import Data.Text.Encoding (decodeUtf8)
 import Data.Vector (Vector)
 import Network.HTTP.Client (BodyReader, Response, brReadSome, responseBody, responseHeaders)
 import Network.HTTP.Types (Header)
@@ -64,7 +63,7 @@ import VtUtils.Error
 import VtUtils.Text
 
 uncase :: Header -> (Text, Text)
-uncase (name, val) = ((decodeUtf8 . original) name, (decodeUtf8 val))
+uncase (name, val) = ((textDecodeUtf8 . original) name, (textDecodeUtf8 val))
 
 -- | @Content-Type@ header for @application/json@ type
 --
@@ -80,7 +79,7 @@ httpContentTypeJSON = ("Content-Type", "application/json")
 -- Return value: URL path string
 --
 httpRequestPath :: Request -> Text
-httpRequestPath = decodeUtf8 . rawPathInfo
+httpRequestPath = textDecodeUtf8 . rawPathInfo
 
 -- | Reads a body of the specified HTTP request as a @Text@ string
 --
@@ -91,7 +90,7 @@ httpRequestPath = decodeUtf8 . rawPathInfo
 -- Return value: Request body as a @Text@ string
 --
 httpRequestBodyText :: Request -> IO Text
-httpRequestBodyText req = (decodeUtf8 . ByteStringLazy.toStrict) <$> strictRequestBody req
+httpRequestBodyText req = (textDecodeUtf8 . ByteStringLazy.toStrict) <$> strictRequestBody req
 
 -- | Exception for `httpRequestBodyJSON` function
 --
@@ -117,6 +116,8 @@ instance Show HTTPRequestBodyJSONException where
 -- >
 --
 -- Data must be an instance of [FromJSON](https://hackage.haskell.org/package/aeson-1.4.2.0/docs/Data-Aeson.html#t:FromJSON)
+--
+-- Throws an exception if request body doesn't contain valid JSON.
 --
 -- Arguments:
 --
@@ -175,6 +176,8 @@ instance Show HTTPResponseBodyException where
 
 -- | Read a body of HTTP response as a lazy @ByteString@
 --
+-- Throws an exception if specified threshold is exceeded.
+--
 -- Arguments:
 --
 --    * @label :: Text@: Label used for error reporting on overly-large responses
@@ -209,7 +212,7 @@ httpResponseBody label resp threshold = do
 httpResponseBodyText :: Text -> Response BodyReader -> Int -> IO Text
 httpResponseBodyText label resp threshold = do
     lbs <- httpResponseBody label resp threshold
-    let tx = decodeUtf8 (ByteStringLazy.toStrict lbs)
+    let tx = textDecodeUtf8 (ByteStringLazy.toStrict lbs)
     return tx
 
 -- | Exception for `httpResponseBodyJSON` function
@@ -238,6 +241,8 @@ instance Show HTTPResponseBodyJSONException where
 -- >
 --
 -- Data must be an instance of [FromJSON](https://hackage.haskell.org/package/aeson-1.4.2.0/docs/Data-Aeson.html#t:FromJSON)
+--
+-- Throws an exception if response body doesn't contain valid JSON.
 --
 -- Arguments:
 --

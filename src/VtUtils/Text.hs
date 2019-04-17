@@ -28,17 +28,19 @@ module VtUtils.Text
     , textSplit
     , textFormatParts
     , textFormat
+    , textDecodeUtf8
     , textDecodeUtf8Limited
     ) where
 
-import Prelude (Either(..), Int, Maybe, Show, String, (+), (-), (.), ($), (==), (/=), (<=), fst, error, otherwise, show)
+import Prelude (Int, Maybe, Show, String, (+), (-), (.), ($), (==), (/=), (<=), fst, error, otherwise, show)
 import Data.ByteString (ByteString)
 import Data.Maybe (isJust, fromJust)
 import Data.Monoid ((<>))
 import Data.List (reverse)
 import Data.Text (Text, breakOnAll, drop, pack, unpack)
 import qualified Data.Text as Text
-import Data.Text.Encoding (decodeUtf8, decodeUtf8')
+import Data.Text.Encoding (decodeUtf8With)
+import Data.Text.Encoding.Error (lenientDecode)
 import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy.Builder (fromText, toLazyText)
 import Data.Typeable (Typeable, cast)
@@ -59,7 +61,7 @@ textShow :: (Show a, Typeable a) => a -> Text
 textShow val
     | isJust castedText = fromJust castedText
     | isJust castedString = pack (fromJust castedString)
-    | isJust castedBytes = decodeUtf8 (fromJust castedBytes)
+    | isJust castedBytes = textDecodeUtf8 (fromJust castedBytes)
     | otherwise = pack (show val)
     where
         castedText = cast val :: Maybe Text
@@ -142,12 +144,13 @@ textFormat :: Text -> Vector Text -> Text
 textFormat template params =
     textFormatParts (textSplit template "{}") params
 
+textDecodeUtf8 :: ByteString -> Text
+textDecodeUtf8 = decodeUtf8With lenientDecode
+
 textDecodeUtf8Limited :: ByteString -> Int -> Text
 textDecodeUtf8Limited bs limit =
-    case decodeUtf8' bs of
-        Left _ -> "INVALID_UTF8"
-        Right tx ->
-            if Text.length tx <= limit then
-                tx
-            else
-                (Text.take limit tx) <> " ..."
+    let tx = textDecodeUtf8 bs in
+        if Text.length tx <= limit then
+            tx
+        else
+            (Text.take limit tx) <> " ..."
