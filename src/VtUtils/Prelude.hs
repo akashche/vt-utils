@@ -89,7 +89,7 @@ module VtUtils.Prelude
     -- Data.Vector
     , Vector
     , (!)
-    , fromList, ifoldl', toList
+    , fromList, ifoldl', toList, singleton
     -- Data.Word
     , Word, Word8, Word16, Word32, Word64
     -- Debug.Trace
@@ -177,7 +177,7 @@ import Data.Text.Lazy.Builder (Builder, fromText, fromLazyText, fromString, toLa
 import Data.Time.Clock (UTCTime, getCurrentTime)
 import Data.Time.Clock.POSIX (POSIXTime, posixSecondsToUTCTime, utcTimeToPOSIXSeconds)
 import Data.Typeable (Typeable, cast)
-import Data.Vector (Vector, (!), fromList, ifoldl', toList)
+import Data.Vector (Vector, (!), fromList, ifoldl', toList, singleton)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
 import Debug.Trace (trace)
 import Foreign (Ptr, castPtr, newForeignPtr_, nullPtr, peek, poke, plusPtr, ptrToIntPtr)

@@ -25,12 +25,16 @@
 
 module VtUtils.Map
     ( mapGet
+    , mapFromVector
     ) where
 
-import Prelude (Maybe(..), (.), ($), error)
+import Prelude (Eq, Int, Maybe(..), (.), ($), error)
+import Data.Hashable (Hashable)
 import Data.HashMap.Strict (HashMap, lookup)
+import qualified Data.HashMap.Strict as HashMap
 import Data.Monoid ((<>))
 import Data.Text (Text, unpack)
+import Data.Vector (Vector, ifoldl')
 
 -- | Lookups a key in a @HashMap@
 --
@@ -39,7 +43,7 @@ import Data.Text (Text, unpack)
 -- Arguments:
 --
 --    * @map :: HashMap Text v@: Map with @Text@ keys
---    * @key :: Text@: Key to lookup
+--    * @key :: Hashable@: Key to lookup
 --
 -- Return value: Map value that corresponds to the specified key
 --
@@ -50,3 +54,10 @@ mapGet map key =
         Just res -> res
         Nothing -> error . unpack $
             "Map entry not found, key: [" <> key <> "]"
+
+mapFromVector :: (Eq k, Hashable k) => Vector v -> (Int -> v -> k) -> HashMap k v
+mapFromVector vec keyfun =
+    ifoldl' fun HashMap.empty vec
+    where
+        fun map idx v = HashMap.insert (keyfun idx v) v map
+

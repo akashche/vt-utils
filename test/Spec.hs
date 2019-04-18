@@ -16,6 +16,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
 
@@ -38,6 +39,7 @@ import PreludeTest
 import ProcessTest
 import QueriesTest
 import TextTest
+import VectorTest
 
 main :: IO ()
 main = hunitMain $ fromList
@@ -56,4 +58,5 @@ main = hunitMain $ fromList
     , processTest
     , queriesTest
     , textTest
+    , vectorTest
     ]

@@ -29,10 +29,9 @@ module VtUtils.Text
     , textFormatParts
     , textFormat
     , textDecodeUtf8
-    , textDecodeUtf8Limited
     ) where
 
-import Prelude (Int, Maybe, Show, String, (+), (-), (.), ($), (==), (/=), (<=), fst, error, otherwise, show)
+import Prelude (Maybe, Show, String, (+), (-), (.), ($), (==), (/=), fst, error, otherwise, show)
 import Data.ByteString (ByteString)
 import Data.Maybe (isJust, fromJust)
 import Data.Monoid ((<>))
@@ -146,11 +145,3 @@ textFormat template params =
 
 textDecodeUtf8 :: ByteString -> Text
 textDecodeUtf8 = decodeUtf8With lenientDecode
-
-textDecodeUtf8Limited :: ByteString -> Int -> Text
-textDecodeUtf8Limited bs limit =
-    let tx = textDecodeUtf8 bs in
-        if Text.length tx <= limit then
-            tx
-        else
-            (Text.take limit tx) <> " ..."

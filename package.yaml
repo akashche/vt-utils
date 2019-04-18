@@ -43,6 +43,7 @@ dependencies:
 - bytestring
 - case-insensitive
 - directory
+- hashable
 - HUnit
 - http-client
 - http-types

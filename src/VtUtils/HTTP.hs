@@ -47,20 +47,21 @@ import Control.Exception (Exception(..), throwIO)
 import Control.Monad (when)
 import Data.Aeson (FromJSON, eitherDecode)
 import Data.ByteString (ByteString)
+import qualified Data.ByteString.Lazy as ByteStringLazy
 import Data.CaseInsensitive (original)
 import Data.HashMap.Strict (HashMap)
+import qualified Data.HashMap.Strict as HashMap
 import Data.Monoid ((<>))
 import Data.Text (Text, pack)
+import qualified Data.Text as Text
 import Data.Vector (Vector)
+import qualified Data.Vector as Vector
 import Network.HTTP.Client (BodyReader, Response, brReadSome, responseBody, responseHeaders)
 import Network.HTTP.Types (Header)
 import Network.Wai (Request, lazyRequestBody, rawPathInfo, requestHeaders, strictRequestBody)
-import qualified Data.ByteString.Lazy as ByteStringLazy
-import qualified Data.HashMap.Strict as HashMap
-import qualified Data.Vector as Vector
 
-import VtUtils.Error
-import VtUtils.Text
+import VtUtils.Error (errorShow)
+import VtUtils.Text (textDecodeUtf8, textShow)
 
 uncase :: Header -> (Text, Text)
 uncase (name, val) = ((textDecodeUtf8 . original) name, (textDecodeUtf8 val))
@@ -103,7 +104,7 @@ instance Show HTTPRequestBodyJSONException where
     show e@(HTTPRequestBodyJSONException {requestBody, message}) = errorShow e $
                "JSON decoding error,"
             <> " message: [" <> message <> "],"
-            <> " request body: [" <> (textDecodeUtf8Limited requestBody 1024) <> "]"
+            <> " request body: [" <> (Text.take 1024 $ textDecodeUtf8 requestBody) <> "]"
 
 -- | Reads a body of the specified HTTP request and parses it as a JSON value
 --
@@ -172,7 +173,7 @@ instance Show HTTPResponseBodyException where
             <> " threshold: [" <> (textShow threshold) <> "],"
             <> " read: [" <> (textShow read) <> "],"
             <> " label: [" <> label <> "],"
-            <> " response part: [" <> (textDecodeUtf8Limited responsePart 1024) <> "]"
+            <> " response part: [" <> (Text.take 1024 $ textDecodeUtf8 responsePart) <> "]"
 
 -- | Read a body of HTTP response as a lazy @ByteString@
 --
@@ -228,7 +229,7 @@ instance Show HTTPResponseBodyJSONException where
                "JSON decoding error,"
             <> " message: [" <> message <> "],"
             <> " label: [" <> label <> "],"
-            <> " response: [" <> (textDecodeUtf8Limited response 1024) <> "]"
+            <> " response: [" <> (Text.take 1024 $ textDecodeUtf8 response) <> "]"
 
 -- | Read a body of HTTP response as a JSON value
 --

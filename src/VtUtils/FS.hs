@@ -36,8 +36,8 @@ import Data.Monoid ((<>))
 import Data.Text (Text, pack, unpack)
 import System.Directory (copyFile, createDirectory, doesDirectoryExist, listDirectory)
 
-import VtUtils.Path
-import VtUtils.Error
+import VtUtils.Error (errorShow)
+import VtUtils.Path (pathConcat)
 
 -- | Exception for `fsCopyDirectory` function
 --

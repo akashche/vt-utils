@@ -15,6 +15,7 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
@@ -22,11 +23,14 @@
 module HUnitTest ( hunitTest ) where
 
 import Test.HUnit
-import Prelude (Int, (+), ($), return)
+import Prelude (Int, IO, (+), ($), return)
+import Control.Exception (SomeException)
 import Data.IORef (newIORef, readIORef, writeIORef)
-import Data.Vector (fromList)
+import qualified Data.Text as Text
+import Data.Vector (fromList, singleton)
 
 import VtUtils.HUnit
+import VtUtils.Text
 
 testMain :: Test
 testMain = TestLabel "testMain" $ TestCase $ do
@@ -40,17 +44,18 @@ testRun = TestLabel "testRun" $ TestCase $ do
             val <- readIORef ref
             _ <- writeIORef ref (val + 1)
             return ()
-    _ <- hunitRun (fromList
-        [ TestLabel "group1" (TestList
+    hunitRun $ fromList
+        [ TestLabel "group1" $ TestList
             [ TestLabel "test1" tst
-            ])
-        ])
+            ]
+        ]
     after <- readIORef ref
     assertEqual "test case called" 1 after
     return ()
 
 testRunGroup :: Test
 testRunGroup = TestLabel "testRunGroup" $ TestCase $ do
+    -- check success
     ref <- newIORef (0 :: Int)
     before <- readIORef ref
     assertEqual "before" 0 before
@@ -58,20 +63,38 @@ testRunGroup = TestLabel "testRunGroup" $ TestCase $ do
             val <- readIORef ref
             _ <- writeIORef ref (val + 1)
             return ()
-    _ <- hunitRunGroup (fromList
-        [ TestLabel "group1" (TestList
+    hunitRunGroup (fromList
+        [ TestLabel "group1" $ TestList
             [ TestLabel "test1" tst
-            ])
-        , TestLabel "group2" (TestList
+            ]
+        , TestLabel "group2" $ TestList
             [ TestLabel "test1" tst
-            ])
+            ]
         ]) "group1"
     after <- readIORef ref
     assertEqual "specified group called" 1 after
+
+    -- check no label
+    errnolabel <- hunitCatchException "no label" $ hunitRunGroup (singleton tst) "" :: IO SomeException
+    assertBool "no label msg" $ Text.isPrefixOf "HUnitGroupLabelNotSpecifiedException" $ textShow errnolabel
+
+    -- check duplicate group
+    errdup <- hunitCatchException "dup" $
+        hunitRunGroup (fromList
+            [ TestLabel "group1" tst
+            , TestLabel "group1" tst
+            ]) "" :: IO SomeException
+    assertBool "dup msg" $ Text.isPrefixOf "HUnitDuplicateGroupLabelException" $ textShow errdup
+
+    -- check missed label
+    errlabelnf <- hunitCatchException "not found" $ hunitRunGroup (fromList []) "group1" :: IO SomeException
+    assertBool "not found" $ Text.isPrefixOf "HUnitLabelNotFoundException" $ textShow errlabelnf
+
     return ()
 
 testRunSingle :: Test
 testRunSingle = TestLabel "testRunSingle" $ TestCase $ do
+    -- check success
     ref <- newIORef (0 :: Int)
     before <- readIORef ref
     assertEqual "before" 0 before
@@ -79,14 +102,30 @@ testRunSingle = TestLabel "testRunSingle" $ TestCase $ do
             val <- readIORef ref
             _ <- writeIORef ref (val + 1)
             return ()
-    _ <- hunitRunSingle (fromList
-        [ TestLabel "group1" (TestList
+    hunitRunSingle (fromList
+        [ TestLabel "group1" $ TestList
             [ TestLabel "test1" tst
             , TestLabel "test2" tst
-            ])
+            ]
         ]) "group1" "test1"
     after <- readIORef ref
     assertEqual "specified test called" 1 after
+
+    -- check non-list group
+    errnolist <- hunitCatchException "no list" $
+        hunitRunSingle (fromList
+            [ TestLabel "group1" tst
+            ]) "group1" "" :: IO SomeException
+    assertBool "nolist" $ Text.isPrefixOf "HUnitNonListGroupException" $ textShow errnolist
+
+    -- check missed label
+    errlabelnf <- hunitCatchException "not found" $
+        hunitRunSingle (fromList
+            [ TestLabel "group1" $ TestList
+                [ TestLabel "test1" tst
+                ]
+            ]) "group1" "test2" :: IO SomeException
+    assertBool "not found" $ Text.isPrefixOf "HUnitLabelNotFoundException" $ textShow errlabelnf
     return ()
 
 hunitTest :: Test

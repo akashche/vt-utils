@@ -37,7 +37,7 @@ import Data.Text (Text, pack, unpack)
 import Data.Time.Clock (UTCTime)
 import Data.Time.Format (defaultTimeLocale, formatTime, parseTimeM)
 
-import VtUtils.Error
+import VtUtils.Error (errorShow)
 
 iso8601 :: Text
 iso8601 = "%Y-%m-%d %H:%M:%S"
