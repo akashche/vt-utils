@@ -81,7 +81,7 @@ testServer = TestLabel "testServer" $ TestCase $ do
                 { Client.method = "GET"
                 , Client.requestHeaders = [("X-Foo", "bar"), ("X-Bar", "42")]
                 }
-        resp1 <- (jsonDecodeText . decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req1 man :: IO Value
+        resp1 <- jsonDecodeTextIO $ (decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req1 man :: IO Value
         assertEqual "get path" "/foo" $ (jsonGet resp1 "path" :: Text)
         assertEqual "get headers count" 4 $ HashMap.size (jsonGet resp1 "headers" :: HashMap Text Text)
         assertEqual "get headers foo" "bar" $ mapGet (jsonGet resp1 "headers" :: HashMap Text Text) "X-Foo"
@@ -92,7 +92,7 @@ testServer = TestLabel "testServer" $ TestCase $ do
                 { Client.method = "POST"
                 , Client.requestBody = Client.RequestBodyBS "bar"
                 }
-        resp2 <- (jsonDecodeText . decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req2 man :: IO Value
+        resp2 <- jsonDecodeTextIO $ (decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req2 man :: IO Value
         assertEqual "post body text" "bar" $ (jsonGet resp2 "bodyText" :: Text)
         -- POST JSON
         let req3 = ((parseRequest_ . unpack) (url <> "json"))
@@ -102,7 +102,7 @@ testServer = TestLabel "testServer" $ TestCase $ do
                     , "bar" .= ("baz" :: Text)
                     ]
                 }
-        resp3 <- (jsonDecodeText . decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req3 man :: IO Value
+        resp3 <- jsonDecodeTextIO $ (decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req3 man :: IO Value
         assertEqual "post text length" 0 $ Text.length (jsonGet resp3 "bodyText" :: Text)
         assertEqual "post json" 42 $ (jsonGet (jsonGet resp3 "bodyJson") "foo" :: Int)
         -- POST invalid JSON
@@ -110,7 +110,7 @@ testServer = TestLabel "testServer" $ TestCase $ do
                 { Client.method = "POST"
                 , Client.requestBody = Client.RequestBodyLBS "json fail"
                 }
-        resp4 <- (jsonDecodeText . decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req4 man :: IO Value
+        resp4 <- jsonDecodeTextIO $ (decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req4 man :: IO Value
         assertBool "json err msg" $ Text.isPrefixOf "HTTPRequestBodyJSONException" (jsonGet resp4 "bodyText")
     return ()
 

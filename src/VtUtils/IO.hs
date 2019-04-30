@@ -19,27 +19,47 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
 
 module VtUtils.IO
-    ( ioWithFileBytes
+    ( IOWithFileException(..)
+    , ioWithFileBytes
     , ioWithFileText
     ) where
 
-import Prelude (IO, ($), return)
+import Prelude (Either(..), IO, Show, ($), return, show)
+import Control.Exception (Exception, SomeException(..), throwIO, try)
+import qualified Data.ByteString.Lazy as ByteStringLazy
+import Data.Monoid ((<>))
 import Data.Text (Text, unpack)
-import Data.Text.Lazy.Encoding (decodeUtf8)
+import Data.Text.Encoding.Error (lenientDecode)
+import Data.Text.Lazy.Encoding (decodeUtf8With)
+import qualified Data.Text.Lazy as TextLazy
 import System.IO (IOMode(ReadMode), withBinaryFile)
 
-import qualified Data.ByteString.Lazy as ByteStringLazy
-import qualified Data.Text.Lazy as TextLazy
+import VtUtils.Error (errorShow)
+import VtUtils.Text (textShow)
+
+-- | Exception for `ioWithFileBytes` and `ioWithFileText` functions
+--
+data IOWithFileException = IOWithFileException
+    { filePath :: Text -- ^ Specified path
+    , exception :: SomeException -- ^ Exception record
+    }
+instance Exception IOWithFileException
+instance Show IOWithFileException where
+    show e@(IOWithFileException {filePath, exception}) = errorShow e $
+               "Error reading file,"
+            <> " path: [" <> filePath <> "],"
+            <> " exception: [" <> textShow(exception) <> "]"
 
 -- | Reads contents of a specified file as a lazy @ByteString@ (with streaming)
 -- and provides it to the specified callback
 --
--- Throws an error if specified file cannot be read
+-- Throws @IOWithFileBytesException@ if specified file cannot be read
 --
 -- Arguments:
 --
@@ -49,18 +69,22 @@ import qualified Data.Text.Lazy as TextLazy
 -- Return value: Result of the callback invocation
 --
 ioWithFileBytes :: Text -> (ByteStringLazy.ByteString -> IO a) -> IO a
-ioWithFileBytes path fun =
-    withBinaryFile (unpack path) ReadMode $ \ha -> do
-        bs <- ByteStringLazy.hGetContents ha
-        res <- fun bs
-        return res
+ioWithFileBytes path fun = do
+    outcome <- try $
+        withBinaryFile (unpack path) ReadMode $ \ha -> do
+            bs <- ByteStringLazy.hGetContents ha
+            res <- fun bs
+            return res
+    case outcome of
+        Left e -> throwIO $ IOWithFileException path e
+        Right res -> return res
 
 -- | Reads contents of a specified file as a lazy @Text@ (with streaming)
 -- and provides it to the specified callback
 --
 -- File contents are decoded as @UTF-8@
 --
--- Throws an error if specified file cannot be read
+-- Throws @IOWithFileBytesException@ if specified file cannot be read
 --
 -- Arguments:
 --
@@ -72,6 +96,6 @@ ioWithFileBytes path fun =
 ioWithFileText :: Text -> (TextLazy.Text -> IO a) -> IO a
 ioWithFileText path fun =
     ioWithFileBytes path $ \bs -> do
-        let tx = decodeUtf8 bs
+        let tx = decodeUtf8With lenientDecode bs
         res <- fun tx
         return res
