@@ -24,16 +24,14 @@
 {-# LANGUAGE Strict #-}
 
 module VtUtils.Map
-    ( mapGet
-    , mapFromVector
+--     ( mapGet
+    ( mapFromVector
     ) where
 
-import Prelude (Eq, Int, Maybe(..), (.), ($), error)
+import Prelude (Eq, Int)
 import Data.Hashable (Hashable)
-import Data.HashMap.Strict (HashMap, lookup)
+import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HashMap
-import Data.Monoid ((<>))
-import Data.Text (Text, unpack)
 import Data.Vector (Vector, ifoldl')
 
 -- | Lookups a key in a @HashMap@
@@ -47,13 +45,13 @@ import Data.Vector (Vector, ifoldl')
 --
 -- Return value: Map value that corresponds to the specified key
 --
-mapGet :: HashMap Text v -> Text -> v
+-- mapGet :: HashMap Text v -> Text -> v
 -- mapGet :: (Eq k, Hashable k) => HashMap k v -> k -> v
-mapGet map key =
-    case lookup key map of
-        Just res -> res
-        Nothing -> error . unpack $
-            "Map entry not found, key: [" <> key <> "]"
+-- mapGet map key =
+--     case lookup key map of
+--         Just res -> res
+--         Nothing -> error . unpack $
+--             "Map entry not found, key: [" <> key <> "]"
 
 mapFromVector :: (Eq k, Hashable k) => Vector v -> (Int -> v -> k) -> HashMap k v
 mapFromVector vec keyfun =

@@ -39,19 +39,19 @@ module VtUtils.JSON
     , JSONDecodeError(..)
     , jsonDecodeText
     , JSONDecodeTextIOException(..)
-    , jsonDecodeTextIO
     , jsonEncodeText
+    , JSONGetError
     , jsonGet
     , jsonUnwrapUnaryOptions
     ) where
 
-import Prelude (Bool(..), Either(..), IO, Show, String, (.), ($), error, return, show)
+import Prelude (Bool(..), Either(..), IO, Show, String, (.), ($), return, show)
 import Control.Exception (Exception, throwIO)
 import Data.Aeson (FromJSON, Value(..), ToJSON, defaultOptions, eitherDecode', eitherDecodeStrict')
 import Data.Aeson.Encode.Pretty (encodePrettyToTextBuilder)
 import Data.Aeson.Types (Options(..), (.:), parseEither)
 import Data.Monoid ((<>))
-import Data.Text (Text, pack, unpack)
+import Data.Text (Text, pack)
 import qualified Data.Text as Text
 import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Lazy (toStrict)
@@ -121,33 +121,6 @@ instance Exception JSONDecodeTextIOException
 instance Show JSONDecodeTextIOException where
     show e@(JSONDecodeTextIOException {err}) = errorShow e $ textShow err
 
--- | Parses a JSON @Text@ string into a typed data
---
--- Data type should be specified with a type annotation:
---
--- Example:
---
--- >
--- >  dt <- jsonDecodeTextIO $ actionReturningIOText ... :: IO Foo
--- >
---
--- Data must be an instance of [FromJSON](https://hackage.haskell.org/package/aeson-1.4.2.0/docs/Data-Aeson.html#t:FromJSON)
---
--- Throws an exception if data cannot be decoded
---
--- Arguments:
---
---    * @io :: IO Text@: @IO@ action that produces JSON @Text@ string to parse
---
--- Return value: Decoded data
---
-jsonDecodeTextIO :: forall a . FromJSON a => IO Text -> IO a
-jsonDecodeTextIO io = do
-    text <- io
-    case jsonDecodeText text of
-        Left e -> throwIO $ JSONDecodeTextIOException e
-        Right res -> return res
-
 -- | Exception for `jsonDecodeFile` function
 --
 data JSONDecodeFileException = JSONDecodeFileException
@@ -190,9 +163,23 @@ jsonDecodeFile path =
             Left err -> throwIO $ JSONDecodeFileException path (pack err)
             Right res -> return res
 
+-- | Error for `jsonGet` function
+--
+data JSONGetError = JSONGetError
+    { objectField :: Text -- ^ Specified property
+    , jsonValue :: Value -- ^ JSON value
+    , message :: Text -- ^ Error message
+    }
+instance Show JSONGetError where
+    show e@(JSONGetError {objectField, jsonValue, message}) = errorShow e $
+               "Error accessing JSON property,"
+            <> " name: [" <> objectField <> "],"
+            <> " text: [" <> (Text.take 1024 $ jsonEncodeText jsonValue) <> "],"
+            <> " error: [" <> message <> "]"
+
 -- | Extract the field value from the specified JSON object
 --
--- Throws an error, if specified JSON @Value@ is not a JSON object,
+-- Returns an error, if specified JSON @Value@ is not a JSON object,
 -- if it does't contain a specified field, if field type is different
 -- from the one specified in type annotation
 --
@@ -203,8 +190,8 @@ jsonDecodeFile path =
 -- >         [ "foo" .= (42 :: Int)
 -- >         , "bar" .= ("baz" :: Text)
 -- >         ]
--- > let fooval = jsonGet obj "foo" :: Int
--- > let barval = jsonGet obj "bar" :: Text
+-- > let Right (fooval :: Int) = jsonGet obj "foo"
+-- > let Right (barval :: Text) = jsonGet obj "bar"
 -- >
 --
 -- Arguments:
@@ -212,21 +199,15 @@ jsonDecodeFile path =
 --    * @val :: Aeson.Value@: JSON value, must be a JSON object
 --    * @field :: Text@: Field name
 --
--- Return value: Field value
+-- Return value: Field value or an error
 --
-jsonGet :: forall a . FromJSON a => Value -> Text -> a
+jsonGet :: forall a . FromJSON a => Value -> Text -> Either JSONGetError a
 jsonGet val field =
     case val of
         Object obj -> case parseEither (.: field) obj :: Either String a of
-            Left err -> error . unpack $
-                    "Error accessing field,"
-                 <> " name: [" <> field <> "],"
-                 <> " object: [" <> (jsonEncodeText obj) <> "]"
-                 <> " message: [" <> (pack err) <> "]"
-            Right a -> a
-        _ -> error .unpack $
-                  "Invalid non-object JSON value specified,"
-                <> " value: [" <> (jsonEncodeText val) <> "]"
+            Left err -> Left $ JSONGetError field val (pack err)
+            Right a -> Right a
+        _ -> Left $ JSONGetError field val "Invalid non-object JSON value specified"
 
 -- | JSON options with @unwrapUnaryRecords@ flag flipped to @True@
 --

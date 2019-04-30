@@ -52,6 +52,10 @@ module VtUtils.Prelude
     -- Data.ByteString
     , ByteString
     , packCString, packCStringLen, useAsCString, useAsCStringLen
+    -- Data.Either
+    , isRight
+    -- Data.Either.Combinators
+    , fromRight'
     -- Data.Foldable
     , foldl', foldr'
     -- Data.HashMap.Strict
@@ -133,7 +137,7 @@ module VtUtils.Prelude
     -- VtUtils.JSON
     , jsonDecodeFile,jsonDecodeText, jsonEncodeText, jsonGet, jsonUnwrapUnaryOptions
     -- VtUtils.Map
-    , mapGet
+    , mapFromVector
     -- VtUtils.Parsec
     , Parser
     , parsecLineContains, parsecLinePrefix, parsecLineNoPrefix, parsecSkipLines, parsecSkipManyTill
@@ -163,6 +167,8 @@ import Data.Aeson (FromJSON, ToJSON, Value, (.=), genericParseJSON, genericToJSO
 import Data.Aeson.Encode.Pretty (encodePretty)
 import Data.Bits ((.&.), (.|.))
 import Data.ByteString (ByteString, packCString, packCStringLen, useAsCString, useAsCStringLen)
+import Data.Either (isRight)
+import Data.Either.Combinators (fromRight')
 import Data.Foldable (foldl', foldr')
 import Data.HashMap.Strict (HashMap, lookup)
 import Data.Int (Int64)
@@ -200,7 +206,7 @@ import VtUtils.HTTP (httpContentTypeJSON, httpRequestBodyJSON, httpRequestBodyTe
     , httpResponseHeaders, httpResponseHeadersMap)
 import VtUtils.IO (ioWithFileBytes, ioWithFileText)
 import VtUtils.JSON (jsonDecodeFile,jsonDecodeText, jsonEncodeText, jsonGet, jsonUnwrapUnaryOptions)
-import VtUtils.Map (mapGet)
+import VtUtils.Map (mapFromVector)
 import VtUtils.Parsec (Parser, parsecLineContains, parsecLinePrefix, parsecLineNoPrefix, parsecSkipLines
     , parsecSkipManyTill, parsecTry, parsecWhitespace, parsecErrorToText, parsecParseFile, parsecParseText )
 import VtUtils.Path (pathIsAbsolute, pathConcat, pathPrepend)

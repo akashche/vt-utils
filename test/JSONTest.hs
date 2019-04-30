@@ -26,6 +26,7 @@ import Test.HUnit
 import Prelude (Either(..), Int, IO, ($), return)
 import Control.Exception (SomeException)
 import Data.Aeson (FromJSON, ToJSON, (.=), genericParseJSON, genericToJSON, object, parseJSON, toJSON)
+import Data.Either.Combinators (fromRight')
 import Data.Text (Text)
 import qualified Data.Text as Text
 import GHC.Generics (Generic)
@@ -123,8 +124,8 @@ testJsonGet = TestLabel "testJsonGet" $ TestCase $ do
             [ "foo" .= (42 :: Int)
             , "bar" .= ("baz" :: Text)
             ]
-    assertEqual "get_foo" 42 (jsonGet obj "foo" :: Int)
-    assertEqual "get_bar" "baz" (jsonGet obj "bar" :: Text)
+    assertEqual "get_foo" 42 (fromRight' $ jsonGet obj "foo" :: Int)
+    assertEqual "get_bar" "baz" (fromRight' $ jsonGet obj "bar" :: Text)
     return ()
 
 testJsonUnwrapUnary :: Test

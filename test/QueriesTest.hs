@@ -23,17 +23,18 @@ module QueriesTest ( queriesTest ) where
 
 import Test.HUnit
 import Prelude (return, ($))
-import Data.HashMap.Strict (size)
+import Data.HashMap.Strict (lookup)
+import Data.Maybe (fromJust)
+import qualified Data.HashMap.Strict as HashMap
 
-import VtUtils.Map
 import VtUtils.Queries
 
 testLoad :: Test
 testLoad = TestLabel "testLoad" $ TestCase $ do
     qrs <- queriesLoad "test/data/test.sql"
-    assertEqual "count" 2 (size qrs)
-    assertEqual "foo" "select foo\nfrom bar" (mapGet qrs "selectFoo")
-    assertEqual "foo" "update bar\nset foo = 42" (mapGet qrs "updateBar")
+    assertEqual "count" 2 (HashMap.size qrs)
+    assertEqual "foo" "select foo\nfrom bar" (fromJust $ lookup "selectFoo" qrs)
+    assertEqual "foo" "update bar\nset foo = 42" (fromJust $ lookup "updateBar" qrs)
     return ()
 
 queriesTest :: Test
