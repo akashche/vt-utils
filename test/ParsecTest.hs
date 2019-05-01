@@ -15,6 +15,7 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
@@ -22,8 +23,8 @@
 module ParsecTest ( parsecTest ) where
 
 import Test.HUnit
-import Prelude (Either(..), ($), ($!), (<$>), (>>), return)
-import Control.Exception (SomeException, try)
+import Prelude (Either(..), ($), (<$>), (>>), return)
+import Data.Either.Combinators (fromRight')
 import Data.Text (Text, isPrefixOf, pack)
 import Text.Parsec ((<|>), digit, many1, string)
 
@@ -35,55 +36,53 @@ tx = "foo 41\n42 bar\nbaz 43\n"
 
 testLineContains :: Test
 testLineContains = TestLabel "testLineContains" $ TestCase $ do
-    assertEqual "41" "foo 41" (parsecParseText (parsecLineContains "41") tx)
-    assertEqual "42" "42 bar" (parsecParseText (parsecLineContains "42") tx)
-    assertEqual "43" "baz 43" (parsecParseText (parsecLineContains "43") tx)
+    assertEqual "41" "foo 41" $ fromRight' $ parsecParseText (parsecLineContains "41") tx
+    assertEqual "42" "42 bar" $ fromRight' $ parsecParseText (parsecLineContains "42") tx
+    assertEqual "43" "baz 43" $ fromRight' $ parsecParseText (parsecLineContains "43") tx
     return ()
 
 testLinePrefix :: Test
 testLinePrefix = TestLabel "testLinePrefix" $ TestCase $ do
-    assertEqual "42" "42 bar" (parsecParseText (parsecLinePrefix "42") tx)
+    assertEqual "42" "42 bar" $ fromRight' $ parsecParseText (parsecLinePrefix "42") tx
     return ()
 
 testLineNoPrefix :: Test
 testLineNoPrefix = TestLabel "testLineNoPrefix" $ TestCase $ do
     let parser = parsecLineNoPrefix "foo"
-    assertEqual "42 line" "42 bar" (parsecParseText parser tx)
+    assertEqual "42 line" "42 bar" $ fromRight' $ parsecParseText parser tx
     return ()
 
 testSkipLines :: Test
 testSkipLines = TestLabel "testSkipLines" $ TestCase $ do
     let parser = parsecSkipLines 1 >> many1 digit
-    assertEqual "42" "42" (parsecParseText parser tx)
+    assertEqual "42" "42" $ fromRight' $ parsecParseText parser tx
     return ()
 
 testSkipManyTill :: Test
 testSkipManyTill = TestLabel "testSkipManyTill" $ TestCase $ do
     let parser = parsecSkipManyTill "42" >> many1 digit
-    assertEqual "42" "42" (parsecParseText parser tx)
+    assertEqual "42" "42" $ fromRight' $ parsecParseText parser tx
     return ()
 
 testTry :: Test
 testTry = TestLabel "testTry" $ TestCase $ do
     let parser = parsecTry (string "bar") <|> string "foo"
-    assertEqual "foo" "foo" (parsecParseText parser tx)
+    assertEqual "foo" "foo" $ fromRight' $ parsecParseText parser tx
     return ()
 
 testWhitespace :: Test
 testWhitespace = TestLabel "testWhitespace" $ TestCase $ do
     let parser = string "foo 41" >> parsecWhitespace >> many1 digit
-    assertEqual "42" "42" (parsecParseText parser tx)
+    assertEqual "42" "42" $ fromRight' $ parsecParseText parser tx
     return ()
 
 testErrorToText :: Test
 testErrorToText = TestLabel "testErrorToText" $ TestCase $ do
-    let expected = "ParseError: file: [], line: [1], column: [1], messages: [unexpected: \"f\", expected: \"bar\"]"
-    res <- try $ return $! parsecParseText (string "bar") tx
-    case res of
+    case parsecParseText (string "bar") tx of
         Right _ -> assertFailure "Parser must fail"
-        Left (e :: SomeException) -> do
+        Left e -> do
             let etx = textShow e
-            assertBool "err message" (isPrefixOf expected etx)
+            assertBool "err message" $ isPrefixOf "ParsecParseTextError" etx
     return ()
 
 testParseFile :: Test
@@ -96,8 +95,7 @@ testParseFile = TestLabel "testParseFile" $ TestCase $ do
 testParseText :: Test
 testParseText = TestLabel "testParseText" $ TestCase $ do
     let parser = pack <$> string "foo"
-    let res = parsecParseText parser "foo"
-    assertEqual "foo" "foo" res
+    assertEqual "foo" "foo" $ fromRight' $ parsecParseText parser "foo"
     return ()
 
 parsecTest :: Test

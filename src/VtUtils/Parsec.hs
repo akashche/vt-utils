@@ -19,6 +19,7 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
@@ -34,25 +35,25 @@ module VtUtils.Parsec
     , parsecTry
     , parsecWhitespace
     -- non-combinator utils
-    , parsecErrorToText
+    , ParsecParseFileException
     , parsecParseFile
+    , ParsecParseTextError
     , parsecParseText
     ) where
 
-import Prelude (Either(..), Int, IO, (-), (>), (.), ($), (<$>), error, return)
-import Data.List (foldl', intersperse)
+import Prelude (Either(..), Int, IO, Show(..), (-), (>), ($), (<$>), return)
+import Control.Exception (Exception, throwIO)
 import Data.Monoid ((<>))
 import Data.Text (Text, isInfixOf, isPrefixOf, pack, stripStart, unpack)
-import Data.Text.Lazy (fromChunks, toStrict)
-import Data.Text.Lazy.Builder (fromString, fromText, toLazyText)
+import qualified Data.Text as Text
+import Data.Text.Lazy (fromChunks)
 import Text.Parsec (ParseError, (<|>), char, lookAhead, manyTill, noneOf, oneOf, parse, skipMany, try)
 import Text.Parsec.Char (anyChar, string)
-import Text.Parsec.Error (Message(..), errorMessages, errorPos, messageString)
-import Text.Parsec.Pos (sourceColumn, sourceLine, sourceName)
 import Text.Parsec.Text.Lazy (Parser)
 
-import VtUtils.IO
-import VtUtils.Text
+import VtUtils.Error (errorShow)
+import VtUtils.IO (ioWithFileText)
+import VtUtils.Text (textShow)
 
 -- combinators
 
@@ -185,40 +186,24 @@ parsecTry = try
 parsecWhitespace :: Parser ()
 parsecWhitespace = skipMany (oneOf [' ', '\t', '\n', '\r'])
 
--- | Formats @ParseError@ into @Text@ string
+-- | Exception for `parsecParseFile` function
 --
--- Arguments:
---
---    * @err :: ParseError@: @ParseError@ thrown by @Parsec@
---
--- Return value: @Text@ representation of a specified error
---
-parsecErrorToText :: ParseError -> Text
-parsecErrorToText err =
-    toStrict $ toLazyText $
-            fromText "ParseError:"
-        <>  fromText " file: [" <> fromString (sourceName pos) <> fromText "],"
-        <>  fromText " line: [" <> fromText (textShow (sourceLine pos)) <> fromText "],"
-        <>  fromText " column: [" <> fromText (textShow (sourceColumn pos)) <> fromText "],"
-        <>  fromText " messages: [" <> msg <> "]"
-    where
-        prefix ms = case ms of
-            (SysUnExpect _) -> "unexpected: "
-            (UnExpect _) -> "unexpected: "
-            (Expect _) -> "expected: "
-            (Message _) -> "message: "
-        errMsgToBuilder ms = fromText (prefix ms) <> fromString (messageString ms)
-        pos = errorPos err
-        msgList = errorMessages err
-        builderList = errMsgToBuilder <$> msgList
-        commaList = intersperse (fromText ", ") builderList
-        msg = foldl' (<>) (fromText "") commaList
+data ParsecParseFileException = ParsecParseFileException
+    { filePath :: Text -- ^ Specified file path
+    , parseError :: ParseError -- ^ Error returned by Parsec
+    }
+instance Exception ParsecParseFileException
+instance Show ParsecParseFileException where
+    show e@(ParsecParseFileException {filePath, parseError}) = errorShow e $
+               "Error parsing file,"
+            <> " path: [" <> filePath <> "],"
+            <> " error: [" <> (textShow parseError) <> "]"
 
 -- | Lazily reads contents from a specified file and parses it using the specified parser
 --
 -- File contents are decoded as @UTF-8@
 --
--- Throws an error on file IO error or parsing error
+-- Throws an exception on file IO error or parsing error
 --
 -- Arguments:
 --
@@ -231,25 +216,37 @@ parsecParseFile :: Parser a -> Text -> IO a
 parsecParseFile parser path =
     ioWithFileText path $ \tx ->
         case parse parser (unpack path) tx of
-            Left err -> (error . unpack) (parsecErrorToText err)
+            Left e -> throwIO $ ParsecParseFileException path e
             Right res -> return res
+
+-- | Error for `parsecParseText` function
+--
+data ParsecParseTextError = ParsecParseTextError
+    { inputText :: Text -- ^ Specified text
+    , parseError :: ParseError -- ^ Error returned by Parsec
+    }
+instance Show ParsecParseTextError where
+    show e@(ParsecParseTextError {inputText, parseError}) = errorShow e $
+               "Error parsing text string,"
+            <> " text: [" <> (Text.take 1024 inputText) <> "],"
+            <> " error: [" <> (textShow parseError) <> "]"
 
 -- | Parser a specified strict @Text@ string using a specified parser
 --
 -- Note: parser is typed on a lazy @Text@ input (so it can also be used with @parsecParseFile@)
 --
--- Throws an error on parsing error
+-- Returns an error on parsing error
 --
 -- Arguments:
 --
 --    * @parser :: Parser a@: Parser to use for the contents of the file
 --    * @text :: Text@: @Text@ string to parse
 --
--- Return value: Resulting value from the specified parser
+-- Return value: Resulting value from the specified parser or parsing error
 --
-parsecParseText :: Parser a -> Text -> a
+parsecParseText :: Parser a -> Text -> Either ParsecParseTextError a
 parsecParseText parser text =
     case parse parser "" (fromChunks [text]) of
-        Left err -> (error . unpack) (parsecErrorToText err)
-        Right res -> res
+        Left e -> Left $ ParsecParseTextError text e
+        Right res -> Right res
 

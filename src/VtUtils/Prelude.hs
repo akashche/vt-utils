@@ -141,7 +141,7 @@ module VtUtils.Prelude
     -- VtUtils.Parsec
     , Parser
     , parsecLineContains, parsecLinePrefix, parsecLineNoPrefix, parsecSkipLines, parsecSkipManyTill
-    , parsecTry, parsecWhitespace, parsecErrorToText, parsecParseFile, parsecParseText
+    , parsecTry, parsecWhitespace, parsecParseFile, parsecParseText
     -- VtUtils.Path
     , pathIsAbsolute, pathConcat, pathPrepend
     -- VtUtils.Process
@@ -208,7 +208,7 @@ import VtUtils.IO (ioWithFileBytes, ioWithFileText)
 import VtUtils.JSON (jsonDecodeFile,jsonDecodeText, jsonEncodeText, jsonGet, jsonUnwrapUnaryOptions)
 import VtUtils.Map (mapFromVector)
 import VtUtils.Parsec (Parser, parsecLineContains, parsecLinePrefix, parsecLineNoPrefix, parsecSkipLines
-    , parsecSkipManyTill, parsecTry, parsecWhitespace, parsecErrorToText, parsecParseFile, parsecParseText )
+    , parsecSkipManyTill, parsecTry, parsecWhitespace, parsecParseFile, parsecParseText )
 import VtUtils.Path (pathIsAbsolute, pathConcat, pathPrepend)
 import VtUtils.Process (processSpawnAndWait)
 import VtUtils.Text (textShow, textFormat, textFormatParts, textSplit)
