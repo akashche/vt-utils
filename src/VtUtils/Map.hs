@@ -19,12 +19,12 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
 
 module VtUtils.Map
---     ( mapGet
     ( mapFromVector
     ) where
 
@@ -34,25 +34,21 @@ import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HashMap
 import Data.Vector (Vector, ifoldl')
 
--- | Lookups a key in a @HashMap@
+-- | Creates a @HashMap@ from a @Vector@
 --
--- Throws an error if key not found in a specified @HashMap@
+-- Creates a @HashMap@ and fills it using the @Vector@ elements as
+-- values and elements with key function as keys.
+--
+-- If key function returns duplicate keys for some elements, previous entry is
+-- replaced with a new one.
 --
 -- Arguments:
 --
---    * @map :: HashMap Text v@: Map with @Text@ keys
---    * @key :: Hashable@: Key to lookup
+--    * @vec :: Vector v@: Input @Vector@
+--    * @keyfun :: (Int -> v -> k)@: Key function that takes an element index and element and returns the map key
 --
--- Return value: Map value that corresponds to the specified key
+-- Return value: @HashMap@ filled with elements from input @Vector@
 --
--- mapGet :: HashMap Text v -> Text -> v
--- mapGet :: (Eq k, Hashable k) => HashMap k v -> k -> v
--- mapGet map key =
---     case lookup key map of
---         Just res -> res
---         Nothing -> error . unpack $
---             "Map entry not found, key: [" <> key <> "]"
-
 mapFromVector :: (Eq k, Hashable k) => Vector v -> (Int -> v -> k) -> HashMap k v
 mapFromVector vec keyfun =
     ifoldl' fun HashMap.empty vec

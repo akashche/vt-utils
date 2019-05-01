@@ -15,6 +15,7 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
@@ -22,21 +23,36 @@
 module MapTest ( mapTest ) where
 
 import Test.HUnit
-import Prelude (($), return)
--- import Data.HashMap.Strict (HashMap, fromList)
+import Prelude (Int, Maybe(..), ($), return)
+import Data.HashMap.Strict (lookup)
+import qualified Data.HashMap.Strict as HashMap
+import Data.Text (Text)
+import qualified Data.Text as Text
+import Data.Vector (Vector, fromList)
 
--- import VtUtils.Map
+import VtUtils.Map
 
--- todo fixme
-testGet :: Test
-testGet = TestLabel "testGet" $ TestCase $ do
---     let map = fromList
---             [ ("foo", 41)
---             , ("bar", 42)
---             ] :: HashMap Text Int
+testFromVector :: Test
+testFromVector = TestLabel "testFromVector" $ TestCase $ do
+    let vec = fromList
+            [ ("foo", 41)
+            , ("bar", 42)
+            , ("foo", 43)
+            ] :: Vector (Text, Int)
+    -- duplicate
+    let map1 = mapFromVector vec $ \_ (lab, _) -> Text.toUpper lab
+    assertEqual "length" 2 $ HashMap.size map1
+    assertEqual "el 1" (Just ("bar", 42)) $ lookup "BAR" map1
+    assertEqual "el 2" (Just ("foo", 43)) $ lookup "FOO" map1
+    -- idx
+    let map2 = mapFromVector vec $ \idx _ -> idx
+    assertEqual "length" 3 $ HashMap.size map2
+    assertEqual "el 1" (Just ("foo", 41)) $ lookup 0 map2
+    assertEqual "el 1" (Just ("bar", 42)) $ lookup 1 map2
+    assertEqual "el 2" (Just ("foo", 43)) $ lookup 2 map2
     return ()
 
 mapTest :: Test
 mapTest = TestLabel "MapTest" $ TestList
-    [ testGet
+    [ testFromVector
     ]
