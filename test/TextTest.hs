@@ -15,6 +15,7 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
@@ -54,7 +55,9 @@ testFormat = TestLabel "testFormat" $ TestCase $ do
     assertEqual "1" "foo 41 bar 42" $ textFormat "foo {} bar {}" (fromList ["41", "42"])
     assertEqual "2" "43 foo 41 bar 42" $ textFormat "{} foo {} bar {}" (fromList ["43", "41", "42"])
     assertEqual "3" "foo 42 bar" $ textFormat "foo {} bar" (fromList ["42"])
-    assertEqual "2" "43 foo 4142 bar 44" $ textFormat "{} foo {}{} bar {}" (fromList ["43", "41", "42", "44"])
+    assertEqual "4" "43 foo 4142 bar 44" $ textFormat "{} foo {}{} bar {}" (fromList ["43", "41", "42", "44"])
+    assertEqual "5" "43 foo 41 bar " $ textFormat "{} foo {}{} bar {}" (fromList ["43", "41"])
+    assertEqual "4" "43 foo 4142 bar 44" $ textFormat "{} foo {}{} bar {}" (fromList ["43", "41", "42", "44", "45", "46"])
     return ()
 
 textTest :: Test

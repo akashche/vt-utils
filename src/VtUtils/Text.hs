@@ -19,6 +19,7 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
@@ -31,19 +32,20 @@ module VtUtils.Text
     , textDecodeUtf8
     ) where
 
-import Prelude (Maybe, Show, String, (+), (-), (.), ($), (==), (/=), fst, error, otherwise, show)
+import Prelude (Maybe, Show, String, (+), (-), (.), (<), (>), ($), (==), (/=), fst, length, otherwise, show)
 import Data.ByteString (ByteString)
 import Data.Maybe (isJust, fromJust)
 import Data.Monoid ((<>))
 import Data.List (reverse)
-import Data.Text (Text, breakOnAll, drop, pack, unpack)
+import Data.Text (Text, breakOnAll, drop, pack)
 import qualified Data.Text as Text
 import Data.Text.Encoding (decodeUtf8With)
 import Data.Text.Encoding.Error (lenientDecode)
 import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy.Builder (fromText, toLazyText)
 import Data.Typeable (Typeable, cast)
-import Data.Vector (Vector, (!), fromList, ifoldl', length)
+import Data.Vector (Vector, (!), fromList, ifoldl')
+import qualified Data.Vector as Vector
 
 -- | Stringifies specified value
 --
@@ -98,7 +100,9 @@ textSplit haystack needle =
 
 -- | Concatenates specified @Vector@ of string parts interspersing it with specified parameters
 --
--- Length of the parameters @Vector@ must be equal to the length of the parts @Vector@ minus 1
+-- If length of parameters @Vector@ is less than a number of parts - 1, then
+-- remaining parameters are filled with empty strings. If parameters vector is too long,
+-- excessive parameters are ignored.
 --
 -- Arguments:
 --
@@ -109,25 +113,26 @@ textSplit haystack needle =
 --
 textFormatParts :: Vector Text -> Vector Text -> Text
 textFormatParts parts params =
-    toStrict $ toLazyText $ ifoldl' fun (fromText "") (check parts)
+    toStrict $ toLazyText $ ifoldl' fun (fromText "") parts
     where
-        check vec =
-            if (length vec) == (length params) + 1 then
-                vec
-            else
-                error . unpack $
-                       "Invalid format string,"
-                    <> " placeholders count: [" <> (textShow ((length vec) - 1)) <> "],"
-                    <> " parameters count: [" <> (textShow (length params)) <> "]"
+        lholes = (length parts) - 1
+        lparams = length params
+        pars
+            | lholes > lparams =
+                Vector.concat [params, Vector.replicate (lholes - lparams) ""]
+            | lholes < lparams = Vector.take lholes params
+            | otherwise = params
         fun ac idx el
-            | length params == idx = ac <> (fromText el)
-            | otherwise = ac <> (fromText el) <> (fromText $ params ! idx)
+            | length pars == idx = ac <> (fromText el)
+            | otherwise = ac <> (fromText el) <> (fromText $ pars ! idx)
 
 -- | Formats specified template with specified parameters @Vector@
 --
 -- Template must use @{}@ string for placeholders.
 --
--- Number of specified parameters must equal to the number of placeholders inside the template.
+-- If length of parameters @Vector@ is less than a number of holes in template, then
+-- remaining parameters are filled with empty strings. If parameters vector is too long,
+-- excessive parameters are ignored.
 --
 -- Template preparation is relatively expensive, consider using @textFormatParts@ for
 -- frequently used templates.
@@ -143,5 +148,15 @@ textFormat :: Text -> Vector Text -> Text
 textFormat template params =
     textFormatParts (textSplit template "{}") params
 
+-- | Decodes @ByteString@ into @Text@ using @UTF-8@ encoding
+--
+-- Invalid byte sequences are replaced with @U+FFFD@
+--
+-- Arguments:
+--
+--    * @bytes :: ByteString@: Byte string
+--
+-- Return value: @Text@ string
+--
 textDecodeUtf8 :: ByteString -> Text
 textDecodeUtf8 = decodeUtf8With lenientDecode

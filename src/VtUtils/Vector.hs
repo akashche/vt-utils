@@ -42,7 +42,7 @@ import qualified Data.Vector as Vector
 --    * @vec :: Vector a@: Vector to search duplicate in
 --    * @keyfun :: (Int -> a -> k)@ Key function, takes index and element as an input
 --
--- Return value: two indices containing the duplicate elements, @Nothing@ if no duplicates were found
+-- Return value: two indices pointing the duplicate elements, @Nothing@ if no duplicates were found
 --
 vectorFirstDuplicate :: (Eq k, Hashable k) => Vector a -> (Int -> a -> k) -> Maybe (Int, Int)
 vectorFirstDuplicate vec keyfun =

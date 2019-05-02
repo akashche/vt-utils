@@ -19,6 +19,7 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
@@ -72,7 +73,7 @@ module VtUtils.Prelude
     , Text
     , pack, unpack
     -- Data.Text.Encoding
-    , decodeUtf8, encodeUtf8
+    , encodeUtf8
     -- Data.Text.Foreign
     , peekCStringLen, withCStringLen
     -- Data.Text.IO
@@ -147,7 +148,7 @@ module VtUtils.Prelude
     -- VtUtils.Process
     , processSpawnAndWait
     -- VtUtils.Text
-    , textShow, textFormat, textFormatParts, textSplit
+    , textDecodeUtf8, textFormat, textFormatParts, textShow, textSplit
     ) where
 
 import Prelude
@@ -175,7 +176,7 @@ import Data.Int (Int64)
 import Data.Maybe (fromJust, isJust)
 import Data.Monoid ((<>), mconcat)
 import Data.Text (Text, pack, unpack)
-import Data.Text.Encoding (decodeUtf8, encodeUtf8)
+import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Foreign (peekCStringLen, withCStringLen)
 import Data.Text.IO (appendFile, getLine, putStrLn, readFile, writeFile)
 import Data.Text.Lazy (toStrict)
@@ -211,4 +212,4 @@ import VtUtils.Parsec (Parser, parsecLineContains, parsecLinePrefix, parsecLineN
     , parsecSkipManyTill, parsecTry, parsecWhitespace, parsecParseFile, parsecParseText )
 import VtUtils.Path (pathIsAbsolute, pathConcat, pathPrepend)
 import VtUtils.Process (processSpawnAndWait)
-import VtUtils.Text (textShow, textFormat, textFormatParts, textSplit)
+import VtUtils.Text (textDecodeUtf8, textFormat, textFormatParts, textShow, textSplit)

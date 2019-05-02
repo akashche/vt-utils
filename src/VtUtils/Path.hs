@@ -19,6 +19,7 @@
 
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Strict #-}
@@ -29,10 +30,11 @@ module VtUtils.Path
     , pathPrepend
     ) where
 
-import Prelude (Bool(..), (.), ($), (==), (&&), error, not, otherwise)
-import Data.Char (isAlphaNum)
+import Prelude (Bool(..), (==), (&&), otherwise)
+import qualified Data.Char as Char
 import Data.Monoid ((<>))
-import Data.Text (Text, head, index, last, length, unpack)
+import Data.Text (Text)
+import qualified Data.Text as Text
 
 -- | Checks whether specified path is absolute
 --
@@ -46,15 +48,15 @@ import Data.Text (Text, head, index, last, length, unpack)
 --
 pathIsAbsolute :: Text -> Bool
 pathIsAbsolute path
-    | 0 == length path = False
-    | '/' == head path = True
-    | 1 == length path = False
-    | isAlphaNum (head path) && ':' == (index path 1) = True
+    | 0 == Text.length path = False
+    | '/' == Text.head path = True
+    | 1 == Text.length path = False
+    | Char.isAlphaNum (Text.head path) && ':' == (Text.index path 1) = True
     | otherwise = False
 
 -- | Concatenates two paths
 --
--- Throws an error, if specified postfix is absolute
+-- Specified postfix must be non-absolute
 --
 -- Arguments:
 --
@@ -65,13 +67,9 @@ pathIsAbsolute path
 --
 pathConcat :: Text -> Text -> Text
 pathConcat prefix postfix
-    | pathIsAbsolute postfix = error . unpack $
-           "Invalid path concatenation with absolute postfix,"
-        <> " prefix: [" <> prefix <> "]"
-        <> " postfix: [" <> postfix <> "]"
-    | 0 == length prefix = postfix
-    | 0 == length postfix = prefix
-    | '/' == last prefix = prefix <> postfix
+    | 0 == Text.length prefix = postfix
+    | 0 == Text.length postfix = prefix
+    | '/' == Text.last prefix = prefix <> postfix
     | otherwise = prefix <> "/" <> postfix
 
 -- | Prepends an absolute prefix to the relative path
@@ -88,14 +86,8 @@ pathConcat prefix postfix
 --
 pathPrepend :: Text -> Text -> Text
 pathPrepend prefix path =
-    if not (pathIsAbsolute prefix) then
-        error . unpack $
-               "Invalid non-absolute path prefix,"
-            <> " prefix: [" <> prefix <> "]"
-            <> " path: [" <> path <> "]"
+    if pathIsAbsolute path then
+        path
     else
-        if pathIsAbsolute path then
-            path
-        else
-            pathConcat prefix path
+        pathConcat prefix path
 
