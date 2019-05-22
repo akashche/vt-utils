@@ -32,7 +32,7 @@ module VtUtils.Prelude
     , abs, ceiling, div, error, flip, floor, fmap, fromIntegral, fst, id, length, mapM, mapM_, mod
     , not, otherwise, pure, read, return, seq, sequence, sequence_, show, snd, take, undefined
     -- Control.Exception
-    , SomeException
+    , Exception, SomeException
     , bracket, bracket_, catch, throw, throwIO, try
     -- Control.Monad
     , forM, forM_, mfilter, unless, when
@@ -159,7 +159,7 @@ import Prelude
     , abs, ceiling, div, error, flip, floor, fmap, fromIntegral, fst, id, length, mapM, mapM_, mod
     , not, otherwise, pure, read, return, seq, sequence, sequence_, snd, show, take, undefined
     )
-import Control.Exception (SomeException, bracket, bracket_, catch, throw, throwIO, try)
+import Control.Exception (Exception, SomeException, bracket, bracket_, catch, throw, throwIO, try)
 import Control.Monad (forM, forM_, mfilter, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.ST (runST)
