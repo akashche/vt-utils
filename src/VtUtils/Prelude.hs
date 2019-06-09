@@ -29,7 +29,7 @@ module VtUtils.Prelude
     , (+), (-), (*), (/), (>), (.), ($), (<)
     , (>=), (<=), (==), (/=), ($!), (>>)
     , (>>=), (&&), (||), (<$>), (<*>)
-    , abs, ceiling, div, error, flip, floor, fmap, fromIntegral, fst, id, length, mapM, mapM_, mod
+    , abs, ceiling, div, flip, floor, fmap, fromIntegral, fst, id, length, mapM, mapM_, mod
     , not, otherwise, pure, read, return, seq, sequence, sequence_, show, snd, take, undefined
     -- Control.Exception
     , Exception, SomeException
@@ -156,7 +156,7 @@ import Prelude
     , (+), (-), (*), (/), (>), (.), ($), (<)
     , (>=), (<=), (==), (/=), ($!), (>>)
     , (>>=), (&&), (||), (<$>), (<*>)
-    , abs, ceiling, div, error, flip, floor, fmap, fromIntegral, fst, id, length, mapM, mapM_, mod
+    , abs, ceiling, div, flip, floor, fmap, fromIntegral, fst, id, length, mapM, mapM_, mod
     , not, otherwise, pure, read, return, seq, sequence, sequence_, snd, show, take, undefined
     )
 import Control.Exception (Exception, SomeException, bracket, bracket_, catch, throw, throwIO, try)
