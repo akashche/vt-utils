@@ -48,6 +48,8 @@ module VtUtils.Prelude
     , genericParseJSON, genericToJSON, object, parseJSON, toJSON
     -- Data.Aeson.Encode.Pretty
     , encodePretty
+    -- Data.Aeson.Types
+    , parseEither
     -- Data.Bits
     , (.&.), (.|.)
     -- Data.ByteString
@@ -56,7 +58,7 @@ module VtUtils.Prelude
     -- Data.Either
     , isRight
     -- Data.Either.Combinators
-    , fromRight'
+    , fromRight, fromRight'
     -- Data.Foldable
     , foldl', foldr'
     -- Data.HashMap.Strict
@@ -166,10 +168,11 @@ import Control.Monad.ST (runST)
 import Control.Monad.Trans.Class (lift)
 import Data.Aeson (FromJSON, ToJSON, Value, (.=), genericParseJSON, genericToJSON, object, parseJSON, toJSON)
 import Data.Aeson.Encode.Pretty (encodePretty)
+import Data.Aeson.Types (parseEither)
 import Data.Bits ((.&.), (.|.))
 import Data.ByteString (ByteString, packCString, packCStringLen, useAsCString, useAsCStringLen)
 import Data.Either (isRight)
-import Data.Either.Combinators (fromRight')
+import Data.Either.Combinators (fromRight, fromRight')
 import Data.Foldable (foldl', foldr')
 import Data.HashMap.Strict (HashMap, lookup)
 import Data.Int (Int64)

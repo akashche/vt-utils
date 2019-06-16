@@ -25,7 +25,7 @@ module HTTPTest ( httpTest ) where
 import Test.HUnit
 import Prelude (Either(..), Int, IO, Maybe(..), (.), ($), (==), (/=), (<$>), return)
 import Control.Exception (SomeException, try)
-import Data.Aeson (Value, (.=), object)
+import Data.Aeson (FromJSON, Value, (.=), object)
 import Data.Aeson.Encode.Pretty (encodePretty)
 import Data.ByteString.Lazy (toStrict)
 import Data.Either.Combinators (fromRight')
@@ -33,6 +33,7 @@ import Data.HashMap.Strict (HashMap, lookup)
 import Data.Monoid ((<>))
 import Data.Text (Text, unpack)
 import Data.Text.Encoding (decodeUtf8)
+import GHC.Generics (Generic)
 import Network.HTTP.Types (status200)
 import Network.HTTP.Client (Manager, newManager, parseRequest_, withResponse)
 import Network.Wai (Application, responseLBS)
@@ -47,6 +48,14 @@ import VtUtils.HUnit
 import VtUtils.JSON
 import VtUtils.Text
 
+data JsonResp = JsonResp
+    { reqPath :: Text
+    , headers :: HashMap Text Text
+    , bodyText :: Text
+    , bodyJson :: Value
+    } deriving Generic
+instance FromJSON JsonResp
+
 reqHandler :: Application
 reqHandler req respond = do
     (bt, bj) <- if "/json" == httpRequestPath req then do
@@ -60,7 +69,7 @@ reqHandler req respond = do
     if "/jsonfail" /= httpRequestPath req then
         respond $ responseLBS status200 [httpContentTypeJSON] $
             encodePretty $ object
-                [ "path" .= httpRequestPath req
+                [ "reqPath" .= httpRequestPath req
                 , "headers" .= httpRequestHeadersMap req
                 , "bodyText" .= bt
                 , "bodyJson" .= bj
@@ -81,19 +90,19 @@ testServer = TestLabel "testServer" $ TestCase $ do
                 { Client.method = "GET"
                 , Client.requestHeaders = [("X-Foo", "bar"), ("X-Bar", "42")]
                 }
-        resp1 <- (fromRight' . jsonDecodeText . decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req1 man :: IO Value
-        assertEqual "get path" "/foo" $ (fromRight' $ jsonGet resp1 "path" :: Text)
-        assertEqual "get headers count" 4 $ HashMap.size (fromRight' $ jsonGet resp1 "headers" :: HashMap Text Text)
-        assertEqual "get headers foo" (Just "bar") $ lookup "X-Foo" (fromRight' $ jsonGet resp1 "headers" :: HashMap Text Text)
-        assertEqual "get headers bar" (Just "42") $ lookup "X-Bar" (fromRight' $ jsonGet resp1 "headers" :: HashMap Text Text)
-        assertEqual "get body length" 0 $ Text.length (fromRight' $ jsonGet resp1 "bodyText" :: Text)
+        resp1 <- (fromRight' . jsonDecodeText . decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req1 man :: IO JsonResp
+        assertEqual "get path" "/foo" $ reqPath resp1
+        assertEqual "get headers count" 4 $ HashMap.size $ headers resp1
+        assertEqual "get headers foo" (Just "bar") $ lookup "X-Foo" $ headers resp1
+        assertEqual "get headers bar" (Just "42") $ lookup "X-Bar" $ headers resp1
+        assertEqual "get body length" 0 $ Text.length $ bodyText resp1
         -- POST text
         let req2 = ((parseRequest_ . unpack) (url <> "foo"))
                 { Client.method = "POST"
                 , Client.requestBody = Client.RequestBodyBS "bar"
                 }
-        resp2 <- (fromRight' . jsonDecodeText . decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req2 man :: IO Value
-        assertEqual "post body text" "bar" $ (fromRight' $ jsonGet resp2 "bodyText" :: Text)
+        resp2 <- (fromRight' . jsonDecodeText . decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req2 man :: IO JsonResp
+        assertEqual "post body text" "bar" $ bodyText resp2
         -- POST JSON
         let req3 = ((parseRequest_ . unpack) (url <> "json"))
                 { Client.method = "POST"
@@ -102,16 +111,16 @@ testServer = TestLabel "testServer" $ TestCase $ do
                     , "bar" .= ("baz" :: Text)
                     ]
                 }
-        resp3 <- (fromRight' . jsonDecodeText . decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req3 man :: IO Value
-        assertEqual "post text length" 0 $ Text.length (fromRight' $ jsonGet resp3 "bodyText" :: Text)
-        assertEqual "post json" 42 $ (fromRight' $ jsonGet (fromRight' $ jsonGet resp3 "bodyJson") "foo" :: Int)
+        resp3 <- (fromRight' . jsonDecodeText . decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req3 man :: IO JsonResp
+        assertEqual "post text length" 0 $ Text.length $ bodyText resp3
+        assertEqual "post json" 42 $ (fromRight' $ jsonGet "foo" $ bodyJson resp3 :: Int)
         -- POST invalid JSON
         let req4 = ((parseRequest_ . unpack) (url <> "json"))
                 { Client.method = "POST"
                 , Client.requestBody = Client.RequestBodyLBS "json fail"
                 }
-        resp4 <- (fromRight' . jsonDecodeText . decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req4 man :: IO Value
-        assertBool "json err msg" $ Text.isPrefixOf "HTTPRequestBodyJSONException" (fromRight' $ jsonGet resp4 "bodyText")
+        resp4 <- (fromRight' . jsonDecodeText . decodeUtf8 . toStrict . Client.responseBody) <$> Client.httpLbs req4 man :: IO JsonResp
+        assertBool "json err msg" $ Text.isPrefixOf "HTTPRequestBodyJSONException" $ bodyText resp4
     return ()
 
 testClient :: Test
@@ -128,8 +137,8 @@ testClient = TestLabel "testClient" $ TestCase $ do
                 }
         -- receive JSON
         json <- withResponse req man $ \resp ->
-            httpResponseBodyJSON url resp 1024 :: IO Value
-        assertEqual "json" 42 $ (fromRight' $ jsonGet (fromRight' $ jsonGet json "bodyJson") "foo" :: Int)
+            httpResponseBodyJSON url resp 1024 :: IO JsonResp
+        assertEqual "json" 42 $ (fromRight' $ jsonGet "foo" $ bodyJson json :: Int)
         -- response threshold
         err <- try $
             withResponse req man $ \resp ->

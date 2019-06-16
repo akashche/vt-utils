@@ -124,8 +124,8 @@ testJsonGet = TestLabel "testJsonGet" $ TestCase $ do
             [ "foo" .= (42 :: Int)
             , "bar" .= ("baz" :: Text)
             ]
-    assertEqual "get_foo" 42 (fromRight' $ jsonGet obj "foo" :: Int)
-    assertEqual "get_bar" "baz" (fromRight' $ jsonGet obj "bar" :: Text)
+    assertEqual "get_foo" 42 (fromRight' $ jsonGet "foo" obj :: Int)
+    assertEqual "get_bar" "baz" (fromRight' $ jsonGet "bar" obj :: Text)
     return ()
 
 testJsonUnwrapUnary :: Test

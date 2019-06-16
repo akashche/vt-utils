@@ -40,7 +40,7 @@ module VtUtils.JSON
     , jsonDecodeText
     , JSONDecodeTextIOException(..)
     , jsonEncodeText
-    , JSONGetError
+    , JSONGetError(..)
     , jsonGet
     , jsonUnwrapUnaryOptions
     ) where
@@ -196,13 +196,13 @@ instance Show JSONGetError where
 --
 -- Arguments:
 --
---    * @val :: Aeson.Value@: JSON value, must be a JSON object
 --    * @field :: Text@: Field name
+--    * @val :: Aeson.Value@: JSON value, must be a JSON object
 --
 -- Return value: Field value or an error
 --
-jsonGet :: forall a . FromJSON a => Value -> Text -> Either JSONGetError a
-jsonGet val field =
+jsonGet :: forall a . FromJSON a => Text -> Value -> Either JSONGetError a
+jsonGet field val =
     case val of
         Object obj -> case parseEither (.: field) obj :: Either String a of
             Left err -> Left $ JSONGetError field val (pack err)
