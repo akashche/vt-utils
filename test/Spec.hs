@@ -18,7 +18,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 import Prelude (IO, ($))
 import Data.Vector (fromList)

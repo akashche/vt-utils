@@ -18,7 +18,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE StrictData #-}
 
 module HUnitTest ( hunitTest ) where
 
