@@ -23,7 +23,7 @@
 module IOTest ( ioTest ) where
 
 import Test.HUnit
-import Prelude (IO, ($), ($!), (<$>), return)
+import Prelude (IO, ($), (<$>), return)
 import Control.Exception (SomeException)
 import qualified Data.ByteString.Lazy as ByteStringLazy
 import Data.Text.Encoding (decodeUtf8)
@@ -36,7 +36,7 @@ import VtUtils.Text
 
 testWithFileBytes :: Test
 testWithFileBytes = TestLabel "testWithFileBytes" $ TestCase $ do
-    let bsfun bs = return $! ByteStringLazy.toStrict bs
+    let bsfun bs = return $ ByteStringLazy.toStrict bs
     -- success
     tx <- decodeUtf8 <$> ioWithFileBytes "test/data/test.txt" bsfun
     assertEqual "bytes" "foo" tx
@@ -47,7 +47,7 @@ testWithFileBytes = TestLabel "testWithFileBytes" $ TestCase $ do
 
 testWithFileText :: Test
 testWithFileText = TestLabel "testWithFileText" $ TestCase $ do
-    let txfun tx = return $! TextLazy.toStrict tx
+    let txfun tx = return $ TextLazy.toStrict tx
     -- success
     tx <- ioWithFileText "test/data/test.txt" txfun
     assertEqual "text" "foo" tx

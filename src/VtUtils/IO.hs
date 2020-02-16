@@ -30,7 +30,7 @@ module VtUtils.IO
     , ioWithFileText
     ) where
 
-import Prelude (Either(..), IO, Show, ($), return, show)
+import Prelude (Either(..), IO, Show, ($), ($!), return, show)
 import Control.Exception (Exception, SomeException(..), throwIO, try)
 import qualified Data.ByteString.Lazy as ByteStringLazy
 import Data.Monoid ((<>))
@@ -74,7 +74,7 @@ ioWithFileBytes path fun = do
         withBinaryFile (unpack path) ReadMode $ \ha -> do
             bs <- ByteStringLazy.hGetContents ha
             res <- fun bs
-            return res
+            return $! res
     case outcome of
         Left e -> throwIO $ IOWithFileException path e
         Right res -> return res
@@ -98,4 +98,4 @@ ioWithFileText path fun =
     ioWithFileBytes path $ \bs -> do
         let tx = decodeUtf8With lenientDecode bs
         res <- fun tx
-        return res
+        return $! res
